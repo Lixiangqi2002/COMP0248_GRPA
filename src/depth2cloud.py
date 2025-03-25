@@ -34,8 +34,6 @@ class point_cloud_generator():
         v = np.arange(self.height)
         u_grid, v_grid = np.meshgrid(u, v, indexing='ij')
 
-        # X = ((u_grid - self.width / 2) * Z) / self.focal_length
-        # Y = ((v_grid - self.height / 2) * Z) / self.focal_length
         X = ((u_grid - self.cx) * Z) / self.fx
         Y = ((v_grid - self.cy) * Z) / self.fy
 
