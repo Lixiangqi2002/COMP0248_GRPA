@@ -14,7 +14,6 @@ class point_cloud_generator():
         self.rgb_file = rgb_file
         self.depth_file = depth_file
         self.output_prefix = output_prefix  # e.g. "data/frame00001"
-        # self.focal_length = focal_length
         self.fx = fx
         self.fy = fy
         self.cx = cx
@@ -76,7 +75,7 @@ class point_cloud_generator():
         self.df_masked = df_sel
 
         t2 = time.time()
-        print(f'3D point cloud (full & mask) computed in {t2 - t1:.2f}s')
+        # print(f'3D point cloud (full & mask) computed in {t2 - t1:.2f}s')
 
     def write_ply(self):
         os.makedirs(os.path.dirname(self.output_prefix), exist_ok=True)
@@ -106,13 +105,13 @@ class point_cloud_generator():
         end_header
         %s
     ''' % (len(points), "".join(points)))
-                print(f"Saved .ply: {out_file}")
+                # print(f"Saved .ply: {out_file}")
 
     def save_npy(self):
         os.makedirs(os.path.dirname(self.output_prefix), exist_ok=True)
         np.save(f"{self.output_prefix}_full.npy", self.df_full.T[:, :3])   
         np.save(f"{self.output_prefix}_mask.npy", self.df_masked.T[:, :3])
-        print(f"Saved .npy: {self.output_prefix}_full.npy & _mask.npy")
+        # print(f"Saved .npy: {self.output_prefix}_full.npy & _mask.npy")
 
     def show_point_cloud(self, tag='mask'):
         ply_file = f"{self.output_prefix}_{tag}.ply"
@@ -139,8 +138,12 @@ def read_intrinsics_from_txt(file_path):
     return fx, fy, cx, cy
 
 
+
 def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, output_prefix_labels):
-    mask = create_polygon_mask(polygon_list, height=480, width=640)
+    if not polygon_list: 
+        mask = np.zeros((480, 640), dtype=np.uint8)
+    else:
+        mask = create_polygon_mask(polygon_list, height=480, width=640)
     pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy)
     pcg.calculate(polygon_mask=mask)
     pcg.write_ply()
@@ -157,6 +160,7 @@ def process_all(base_dir, output_dir):
     all_splits = train_splits + test_splits
     dir_name = ''
     for split in all_splits:
+        print(f"Processing {split}...")
         if split[0:3] == 'mit':
             dir_name = 'train'
         else:
@@ -166,7 +170,6 @@ def process_all(base_dir, output_dir):
             continue
 
         subfolders = [os.path.join(split_dir, d) for d in os.listdir(split_dir) if os.path.isdir(os.path.join(split_dir, d))]
-
         for scene in subfolders:
             image_dir = os.path.join(scene, 'image')
             depth_dir = os.path.join(scene, 'depth') if os.path.exists(os.path.join(scene, 'depth')) else os.path.join(scene, 'depthTSDF')
@@ -178,18 +181,22 @@ def process_all(base_dir, output_dir):
             print(intrinsic_path)
             fx, fy, cx, cy = read_intrinsics_from_txt(intrinsic_path)
 
-            if not (os.path.exists(image_dir) and os.path.exists(depth_dir) and os.path.exists(label_path) and os.path.exists(intrinsic_path)):
+            if not (os.path.exists(image_dir) and os.path.exists(depth_dir) and os.path.exists(intrinsic_path)):
                 continue
-            with open(label_path, 'rb') as label_file:
-                tabletop_labels = pickle.load(label_file)
-                label_file.close()  
+            if not os.path.exists(label_path):
+                tabletop_labels = np.array([None] * len(os.listdir(image_dir)))
+            else:
+                with open(label_path, 'rb') as label_file:
+                    tabletop_labels = pickle.load(label_file)
+                    label_file.close()  
 
             # Process all frames in the scene
             image_files = sorted(os.listdir(image_dir))
             depth_files = sorted(os.listdir(depth_dir))
+            print(len(image_files))
             for polygon_list, img_file, depth_file in zip(tabletop_labels, image_files, depth_files):
-                print(img_file)
-                print(depth_file)
+                # print(img_file)
+                # print(depth_file)
                 rgb_path = os.path.join(image_dir, img_file)
                 d_path = os.path.join(depth_dir, depth_file)
                 filename_no_ext = os.path.splitext(img_file)[0]
@@ -202,13 +209,35 @@ def process_all(base_dir, output_dir):
                 #     plt.plot(polygon[0]+polygon[0][0:1],polygon[1]+polygon[1][0:1],'r')
                 # plt.axis('off')
                 # plt.show()    
-           
+  
         #         break
         #     break  
         # break    
+
+
+def generate_label_file(split_dir, output_file):
+    entries = []
+    for root, _, files in os.walk(split_dir):
+        for file in files:
+            if file.endswith("_mask.npy"):
+                # print(file)
+                file_path = os.path.join(root, file)
+                pc = np.load(file_path)
+                label = 0 if pc.shape[0] == 0 else 1
+                file_path = file_path.replace('_mask.npy', '_full.npy')
+                entries.append(f"{file_path} {label}\n")
+
+    with open(output_file, "w") as f:
+        f.writelines(entries)
+    print(f"Saved {len(entries)} entries to {output_file}")
+
 
 
 if __name__ == '__main__':
     base_path = "data/CW2-Dataset/data"
     output_path = "data/dataset/point_clouds"
     process_all(base_path, output_path)
+  
+  
+    generate_label_file("data/dataset/point_clouds/train", "data/dataset/point_clouds/train/train_labels.txt")
+    generate_label_file("data/dataset/point_clouds/test", "data/dataset/point_clouds/test/test_labels.txt")
