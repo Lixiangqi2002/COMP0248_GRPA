@@ -1,3 +1,5 @@
+import random
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, random_split
@@ -7,46 +9,59 @@ import torch.nn as nn
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import open3d as o3d
 import matplotlib.pyplot as plt
-from DGCNN import DGCNN
+from DGCNN import DGCNN, PointNet
 
-class PointNetClassifier(nn.Module):
-    def __init__(self):
-        super(PointNetClassifier, self).__init__()
-        self.feature_extractor = nn.Sequential(
-            nn.Conv1d(3, 64, 1),
-            nn.BatchNorm1d(64),
-            nn.ReLU(),
+# class PointNetClassifier(nn.Module):
+#     def __init__(self):
+#         super(PointNetClassifier, self).__init__()
+#         self.feature_extractor = nn.Sequential(
+#             nn.Conv1d(3, 64, 1),
+#             nn.BatchNorm1d(64),
+#             nn.ReLU(),
 
-            nn.Conv1d(64, 128, 1),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
+#             nn.Conv1d(64, 128, 1),
+#             nn.BatchNorm1d(128),
+#             nn.ReLU(),
 
-            nn.Conv1d(128, 256, 1),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-        )
+#             nn.Conv1d(128, 256, 1),
+#             nn.BatchNorm1d(256),
+#             nn.ReLU(),
+#         )
 
-        self.classifier = nn.Sequential(
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(128, 2)  # binary classification 
-        )
+#         self.classifier = nn.Sequential(
+#             nn.Linear(256, 128),
+#             nn.ReLU(),
+#             nn.Dropout(0.3),
+#             nn.Linear(128, 2)  # binary classification 
+#         )
 
-    def forward(self, x):
-        x = x.transpose(2, 1)  # (B, 3, N)
-        x = self.feature_extractor(x)  # (B, 256, N)
-        x = torch.max(x, 2)[0]  # global feature (B, 256)
-        x = self.classifier(x)  # (B, 2)
-        return x
+#     def forward(self, x):
+#         x = x.transpose(2, 1)  # (B, 3, N)
+#         x = self.feature_extractor(x)  # (B, 256, N)
+#         x = torch.max(x, 2)[0]  # global feature (B, 256)
+#         x = self.classifier(x)  # (B, 2)
+#         return x
+    
+def set_seed(seed=42):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
+set_seed(42)
 
 def train(train_loader, val_loader, device):
     # model = PointNetClassifier().to(device)
-    model = DGCNN().to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-    best_val_acc = 0.0
+    # model = DGCNN().to(device)
+    model = PointNet().to(device)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 
+    best_val_acc = 0.0
+    best_val_loss = float("inf")
     train_losses = []
     val_losses = []
 
@@ -57,17 +72,18 @@ def train(train_loader, val_loader, device):
         total = 0
 
         for pc, label in train_loader:
-            pc, label = pc.to(device), label.to(device).float()
+            pc, label = pc.to(device), label.to(device).long()
             out = model(pc)
-
-            loss = F.cross_entropy(out, label.long())
+ 
+            loss = F.cross_entropy(out, label)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            total_loss += loss.item() * pc.size(0)
+            total_loss += loss.item() #* pc.size(0)
             pred = out.argmax(dim=1)
-            correct += (pred == label.long()).sum().item()
+            
+            correct += (pred == label).sum().item()
             total += label.size(0)
 
         acc = correct / total
@@ -84,7 +100,7 @@ def train(train_loader, val_loader, device):
                 pc, label = pc.to(device), label.to(device).float()
                 out = model(pc)
                 loss = F.cross_entropy(out, label.long())
-                val_total_loss += loss.item() * pc.size(0)
+                val_total_loss += loss.item() #* pc.size(0)
                 pred = out.argmax(dim=1)
                 val_correct += (pred == label.long()).sum().item()
                 val_total += label.size(0)
@@ -94,9 +110,9 @@ def train(train_loader, val_loader, device):
         val_losses.append(avg_val_loss)
 
         print(f"[Epoch {epoch+1}] Train Loss: {avg_train_loss:.4f} | Train Accuracy: {acc:.4f} | Val Loss: {avg_val_loss:.4f} | Val Accuracy: {val_acc:.4f}")
-
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
+        scheduler.step()
+        if avg_val_loss < best_val_loss:
+            best_val_loss = avg_val_loss
             os.makedirs("checkpoints", exist_ok=True)
             torch.save(model.state_dict(), "weights/pipeline_A.pth")
             print("Saved best model to weights/pipeline_A.pth")
@@ -114,7 +130,8 @@ def train(train_loader, val_loader, device):
 
 def test(test_loader, device):
     # model = PointNetClassifier().to(device)
-    model = DGCNN().to(device)
+    # model = DGCNN().to(device)
+    model = PointNet().to(device)
     model.eval()
 
     model.load_state_dict(torch.load("weights/pipeline_A.pth", weights_only=True))
@@ -131,7 +148,7 @@ def test(test_loader, device):
             out = model(pc)
             loss = F.cross_entropy(out, label.long())
 
-            total_loss += loss.item() * pc.size(0)
+            total_loss += loss.item() #* pc.size(0)
             pred = out.argmax(dim=1)
             correct += (pred == label.long()).sum().item()
             total += label.size(0)
@@ -157,12 +174,12 @@ if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     full_dataset = PointCloudDataset("data/dataset/point_clouds/train/train_labels.txt", num_points=4096, augment=True)
-    train_size = int(0.7 * len(full_dataset))
+    train_size = int(0.75 * len(full_dataset))
     val_size = len(full_dataset) - train_size
     train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
 
     train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=2, shuffle=False)
+    val_loader = DataLoader(val_dataset, batch_size=2, shuffle=True)
 
     test_dataset = PointCloudDataset("data/dataset/point_clouds/test/test_labels.txt", num_points=4096, test=True)
     test_loader = DataLoader(test_dataset, batch_size=2, shuffle=False)
