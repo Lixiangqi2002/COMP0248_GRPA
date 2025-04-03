@@ -1,4 +1,7 @@
+from pathlib import Path
 import pickle
+import shutil
+from typing import List
 from matplotlib import pyplot as plt
 import numpy as np
 import time
@@ -20,23 +23,38 @@ class point_cloud_generator():
         self.cy = cy
         self.scalingfactor = scalingfactor
         self.rgb = Image.open(rgb_file)
-        self.depth = Image.open(depth_file).convert('I')  # uint16
+        if depth_file.endswith(".npy"):
+            self.depth = np.load(depth_file)#.T  # shape: (H, W)
+            self.depth_type = "npy"
+        else:
+            self.depth = np.asarray(Image.open(depth_file).convert('I'))#.T  # uint16 PNG
+            self.depth_type = "png"
+        # self.depth = Image.open(depth_file).convert('I')  # uint16
         self.width = self.rgb.size[0]
         self.height = self.rgb.size[1]
 
     def calculate(self, polygon_mask=None):
         t1 = time.time()
         depth = np.asarray(self.depth).T  # (H, W)
-        Z = depth / self.scalingfactor
+        # Z = depth / self.scalingfactor
+        if self.depth_type == "npy":
+            Z = np.asarray(self.depth)  # m
+            img = np.array(self.rgb)#.transpose(1, 0, 2)
+            u = np.arange(self.width)
+            v = np.arange(self.height)
+            u_grid, v_grid = np.meshgrid(u, v, indexing='xy')
 
-        u = np.arange(self.width)
-        v = np.arange(self.height)
-        u_grid, v_grid = np.meshgrid(u, v, indexing='ij')
+        else:
+            Z = depth / self.scalingfactor  # PNG: uint16 mm ➜ m
+            img = np.array(self.rgb).transpose(1, 0, 2)  # (W, H, 3)
+
+            u = np.arange(self.width)
+            v = np.arange(self.height)
+            u_grid, v_grid = np.meshgrid(u, v, indexing='ij')
 
         X = ((u_grid - self.cx) * Z) / self.fx
         Y = ((v_grid - self.cy) * Z) / self.fy
 
-        img = np.array(self.rgb).transpose(1, 0, 2)  # (W, H, 3)
 
         valid = (Z > 0)
 
@@ -55,7 +73,8 @@ class point_cloud_generator():
         self.df_full = df_full
 
         if polygon_mask is not None:
-            polygon_mask = polygon_mask.T  # match (W, H)
+            if self.depth_type == "png":
+                polygon_mask = polygon_mask.T
             valid_mask = valid & (polygon_mask > 0)
         else:
             valid_mask = valid
@@ -81,6 +100,8 @@ class point_cloud_generator():
         os.makedirs(os.path.dirname(self.output_prefix), exist_ok=True)
 
         for tag, df in zip(['full', 'mask'], [self.df_full, self.df_masked]):
+            # if tag == 'mask':
+            #     break
             out_file = f"{self.output_prefix}_{tag}.ply"
 
             float_formatter = lambda x: "%.4f" % x
@@ -146,6 +167,7 @@ def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, out
         mask = create_polygon_mask(polygon_list, height=480, width=640)
     pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy)
     pcg.calculate(polygon_mask=mask)
+    # pcg.calculate(polygon_mask=None)
     pcg.write_ply()
     pcg.save_npy()
     # pcg.show_point_cloud(tag='mask')
@@ -231,13 +253,78 @@ def generate_label_file(split_dir, output_file):
         f.writelines(entries)
     print(f"Saved {len(entries)} entries to {output_file}")
 
+def copy_scene_images(scene_list, out_img_dir, out_depth_dir, src_root):
+    for scene in scene_list:
+        scene_dir = src_root / scene
+        if not scene_dir.exists():
+            print(f"[Warning] Scene not found: {scene_dir}")
+            continue
+        for subscene in sorted(scene_dir.iterdir()):
+            if not subscene.is_dir(): continue
+            image_dir = subscene / "image"
+            depth_dir = subscene / "depthTSDF" if (subscene / "depthTSDF").exists() else subscene / "depth"
+
+            if not image_dir.exists() or not depth_dir.exists():
+                print(f"[Skip] Missing image/depth folder in {subscene}")
+                continue
+
+            img_files = sorted(os.listdir(image_dir))
+            depth_files = sorted(os.listdir(depth_dir))
+
+            # Ensure matching count
+            assert len(img_files) == len(depth_files), f"Mismatch: {len(img_files)} RGBs vs {len(depth_files)} depth maps in {subscene}"
+
+            for img_fname, depth_fname in zip(img_files, depth_files):
+                # print(f"RGB: {img_fname} | Depth: {depth_fname}")
+                src_img = image_dir / img_fname
+                src_depth = depth_dir / depth_fname
+
+                out_img = out_img_dir / f"{scene}_{subscene.name}_{img_fname}"
+                out_depth = out_depth_dir / f"{scene}_{subscene.name}_{depth_fname}"
+
+                shutil.copy(src_img, out_img)
+                shutil.copy(src_depth, out_depth)
+
+def organize_rgbd_dataset(src_root, train_scenes,test_scenes,dst_root: str = "data/dataset/depth_img"):
+    src_root = Path(src_root)
+    dst_root = Path(dst_root)
+    
+    out_train_img = dst_root / "train" / "image"
+    out_train_depth = dst_root / "train" / "depth"
+    out_test_img = dst_root / "test" / "image"
+    out_test_depth = dst_root / "test" / "depth"
+    
+    for p in [out_train_img, out_train_depth, out_test_img, out_test_depth]:
+        p.mkdir(parents=True, exist_ok=True)
+
+    copy_scene_images(train_scenes, out_train_img, out_train_depth,src_root)
+    copy_scene_images(test_scenes, out_test_img, out_test_depth, src_root)
+
+    print("Done: RGB-D dataset organized into:")
+    print(f"  {out_train_img.parent} and {out_test_img.parent}")
 
 
 if __name__ == '__main__':
     base_path = "data/CW2-Dataset/data"
+
+    # point cloud dataset orgnization
     output_path = "data/dataset/point_clouds"
     process_all(base_path, output_path)
   
-  
     generate_label_file("data/dataset/point_clouds/train", "data/dataset/point_clouds/train/train_labels.txt")
     generate_label_file("data/dataset/point_clouds/test", "data/dataset/point_clouds/test/test_labels.txt")
+
+    # RGB-D dataset organization
+    output_image_path = "data/dataset/depth_img"
+    train_scenes = [
+        'mit_32_d507', 'mit_76_459', 'mit_76_studyroom',
+        'mit_gym_z_squash', 'mit_lab_hj'
+    ]
+    test_scenes = ['harvard_c5', 'harvard_c6', 'harvard_c11', 'harvard_tea_2']
+
+    organize_rgbd_dataset(
+        src_root=base_path,
+        train_scenes=train_scenes,
+        test_scenes=test_scenes,
+        dst_root=output_image_path
+    )

@@ -1,0 +1,7 @@
+Namespace(use_cpu=False, gpu='0', batch_size=4, epoch=100, learning_rate=0.001, num_point=2048, log_dir='binary_pointnet2_pipeline_B', resume=False, train_label_path='data/dataset/depth_prediction_point_clouds/train/point_clouds/train_labels.txt')
+Epoch 1/100
+Epoch 1: Train Loss: 0.7613 | Train Accuracy: 0.5491
+Val Accuracy: 0.4035, Val Loss: 0.9101
+Saving best model...
+Epoch 2/100
+Epoch 2: Train Loss: 0.7908 | Train Accuracy: 0.5357

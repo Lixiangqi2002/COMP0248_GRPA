@@ -1,0 +1,38 @@
+Loading test dataset...
+Loading model...
+Running evaluation...
+
+Confusion Matrix:
+[[24  4]
+ [20 50]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    No Table     0.5455    0.8571    0.6667        28
+       Table     0.9259    0.7143    0.8065        70
+
+    accuracy                         0.7551        98
+   macro avg     0.7357    0.7857    0.7366        98
+weighted avg     0.8172    0.7551    0.7665        98
+
+Test Accuracy: 0.7551
+Loading test dataset...
+Loading model...
+Running evaluation...
+
+Confusion Matrix:
+[[25  3]
+ [21 49]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    No Table     0.5435    0.8929    0.6757        28
+       Table     0.9423    0.7000    0.8033        70
+
+    accuracy                         0.7551        98
+   macro avg     0.7429    0.7964    0.7395        98
+weighted avg     0.8284    0.7551    0.7668        98
+
+Test Accuracy: 0.7551

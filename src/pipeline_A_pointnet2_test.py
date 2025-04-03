@@ -15,12 +15,12 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
 def parse_args():
-    parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing')
+    parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline A')
     parser.add_argument('--use_cpu', action='store_true', default=False, help='Use CPU')
     parser.add_argument('--gpu', type=str, default='0', help='GPU device')
     parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
     parser.add_argument('--num_point', type=int, default=2048, help='Point Number')
-    parser.add_argument('--log_dir', type=str, default='binary_pointnet2', help='Experiment log directory')
+    parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_A', help='Experiment log directory')
     parser.add_argument('--test_label_path', type=str, default='data/dataset/point_clouds/test/test_labels.txt', help='Path to test label file')
     return parser.parse_args()
 
@@ -65,13 +65,13 @@ def plot_confusion_matrix(y_true, y_pred, save_path):
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
     plt.tight_layout()
+    plt.show()
     plt.savefig(save_path)
-    plt.close()
+    # plt.close()
 
 
-def main():
-    global args
-    args = parse_args()
+def main(args):
+    
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     experiment_dir = Path('./log/').joinpath(args.log_dir)
@@ -107,4 +107,6 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    global args
+    args = parse_args()
+    main(args)
