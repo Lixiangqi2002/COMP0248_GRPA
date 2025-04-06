@@ -1,0 +1,147 @@
+2025-04-03 17:28:00,969 - Model - INFO - PARAMETER ...
+2025-04-03 17:28:00,969 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:28:04,188 - Model - INFO - Mean IoU of batch 0: 1.0000
+2025-04-03 17:28:04,590 - Model - INFO - Mean IoU of batch 1: 0.4369
+2025-04-03 17:28:04,980 - Model - INFO - Mean IoU of batch 2: 0.4144
+2025-04-03 17:28:05,394 - Model - INFO - Mean IoU of batch 3: 0.4438
+2025-04-03 17:28:05,789 - Model - INFO - Mean IoU of batch 4: 0.4589
+2025-04-03 17:28:06,184 - Model - INFO - Mean IoU of batch 5: 0.2463
+2025-04-03 17:28:06,565 - Model - INFO - Mean IoU of batch 6: 0.4443
+2025-04-03 17:28:06,981 - Model - INFO - Mean IoU of batch 7: 0.4531
+2025-04-03 17:28:07,395 - Model - INFO - Mean IoU of batch 8: 0.3551
+2025-04-03 17:28:07,788 - Model - INFO - Mean IoU of batch 9: 0.3731
+2025-04-03 17:28:08,206 - Model - INFO - Mean IoU of batch 10: 0.3176
+2025-04-03 17:28:08,625 - Model - INFO - Mean IoU of batch 11: 0.3225
+2025-04-03 17:28:09,026 - Model - INFO - Mean IoU of batch 12: 0.3739
+2025-04-03 17:28:09,430 - Model - INFO - Mean IoU of batch 13: 0.4178
+2025-04-03 17:28:09,855 - Model - INFO - Mean IoU of batch 14: 0.3815
+2025-04-03 17:28:10,268 - Model - INFO - Mean IoU of batch 15: 0.4882
+2025-04-03 17:28:10,651 - Model - INFO - Mean IoU of batch 16: 0.4091
+2025-04-03 17:28:11,053 - Model - INFO - Mean IoU of batch 17: 0.4984
+2025-04-03 17:28:11,443 - Model - INFO - Mean IoU of batch 18: 0.3107
+2025-04-03 17:28:11,827 - Model - INFO - Mean IoU of batch 19: 0.3488
+2025-04-03 17:28:12,218 - Model - INFO - Mean IoU of batch 20: 0.3458
+2025-04-03 17:28:12,604 - Model - INFO - Mean IoU of batch 21: 0.4573
+2025-04-03 17:28:12,997 - Model - INFO - Mean IoU of batch 22: 0.3127
+2025-04-03 17:28:13,395 - Model - INFO - Mean IoU of batch 23: 0.4867
+2025-04-03 17:28:13,782 - Model - INFO - Mean IoU of batch 24: 0.4407
+2025-04-03 17:28:14,179 - Model - INFO - Mean IoU of batch 25: 0.4211
+2025-04-03 17:28:14,564 - Model - INFO - Mean IoU of batch 26: 0.4243
+2025-04-03 17:28:14,950 - Model - INFO - Mean IoU of batch 27: 0.3593
+2025-04-03 17:28:15,343 - Model - INFO - Mean IoU of batch 28: 0.3577
+2025-04-03 17:28:15,731 - Model - INFO - Mean IoU of batch 29: 0.3174
+2025-04-03 17:28:16,124 - Model - INFO - Mean IoU of batch 30: 0.3874
+2025-04-03 17:28:16,519 - Model - INFO - Mean IoU of batch 31: 0.3475
+2025-04-03 17:28:16,914 - Model - INFO - Mean IoU of batch 32: 0.3813
+2025-04-03 17:28:17,301 - Model - INFO - Mean IoU of batch 33: 0.4163
+2025-04-03 17:28:17,701 - Model - INFO - Mean IoU of batch 34: 0.4031
+2025-04-03 17:28:18,088 - Model - INFO - Mean IoU of batch 35: 0.9993
+2025-04-03 17:28:18,474 - Model - INFO - Mean IoU of batch 36: 0.3708
+2025-04-03 17:28:18,858 - Model - INFO - Mean IoU of batch 37: 0.4848
+2025-04-03 17:28:19,270 - Model - INFO - Mean IoU of batch 38: 1.0000
+2025-04-03 17:28:19,650 - Model - INFO - Mean IoU of batch 39: 0.4379
+2025-04-03 17:28:20,037 - Model - INFO - Mean IoU of batch 40: 0.3583
+2025-04-03 17:28:20,429 - Model - INFO - Mean IoU of batch 41: 0.4120
+2025-04-03 17:28:20,808 - Model - INFO - Mean IoU of batch 42: 0.4229
+2025-04-03 17:28:21,196 - Model - INFO - Mean IoU of batch 43: 0.3285
+2025-04-03 17:28:21,577 - Model - INFO - Mean IoU of batch 44: 0.4252
+2025-04-03 17:28:21,979 - Model - INFO - Mean IoU of batch 45: 0.3185
+2025-04-03 17:28:22,368 - Model - INFO - Mean IoU of batch 46: 0.3153
+2025-04-03 17:28:22,765 - Model - INFO - Mean IoU of batch 47: 0.9999
+2025-04-03 17:28:23,143 - Model - INFO - Mean IoU of batch 48: 0.4007
+2025-04-03 17:28:23,199 - Model - INFO - ------- IoU --------
+2025-04-03 17:28:23,199 - Model - INFO - class table, IoU: 0.800
+2025-04-03 17:28:23,199 - Model - INFO - class not_table, IoU: 0.001
+2025-04-03 17:28:23,199 - Model - INFO - Final eval point avg class IoU: 0.4007
+2025-04-03 17:28:23,199 - Model - INFO - Final eval point accuracy: 0.8002
+2025-04-03 17:31:55,891 - Model - INFO - PARAMETER ...
+2025-04-03 17:31:55,891 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:32:51,444 - Model - INFO - PARAMETER ...
+2025-04-03 17:32:51,444 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:35:00,353 - Model - INFO - PARAMETER ...
+2025-04-03 17:35:00,353 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:36:27,708 - Model - INFO - PARAMETER ...
+2025-04-03 17:36:27,708 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:36:53,461 - Model - INFO - Mean IoU of batch 0: 1.0000
+2025-04-03 17:36:57,162 - Model - INFO - Mean IoU of batch 1: 0.4393
+2025-04-03 17:37:00,987 - Model - INFO - Mean IoU of batch 2: 0.4147
+2025-04-03 17:37:08,208 - Model - INFO - Mean IoU of batch 3: 0.4399
+2025-04-03 17:37:16,590 - Model - INFO - Mean IoU of batch 4: 0.4586
+2025-04-03 17:37:19,277 - Model - INFO - Mean IoU of batch 5: 0.2500
+2025-04-03 17:47:37,606 - Model - INFO - PARAMETER ...
+2025-04-03 17:47:37,607 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:48:41,772 - Model - INFO - PARAMETER ...
+2025-04-03 17:48:41,772 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:49:08,896 - Model - INFO - PARAMETER ...
+2025-04-03 17:49:08,896 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:49:59,520 - Model - INFO - PARAMETER ...
+2025-04-03 17:49:59,520 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:50:16,282 - Model - INFO - PARAMETER ...
+2025-04-03 17:50:16,282 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:50:41,522 - Model - INFO - PARAMETER ...
+2025-04-03 17:50:41,522 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:51:17,648 - Model - INFO - PARAMETER ...
+2025-04-03 17:51:17,648 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:53:49,718 - Model - INFO - PARAMETER ...
+2025-04-03 17:53:49,718 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:56:25,129 - Model - INFO - PARAMETER ...
+2025-04-03 17:56:25,129 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:57:12,307 - Model - INFO - PARAMETER ...
+2025-04-03 17:57:12,307 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:57:47,072 - Model - INFO - PARAMETER ...
+2025-04-03 17:57:47,073 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:58:07,843 - Model - INFO - PARAMETER ...
+2025-04-03 17:58:07,843 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 17:59:25,219 - Model - INFO - PARAMETER ...
+2025-04-03 17:59:25,219 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:00:02,750 - Model - INFO - PARAMETER ...
+2025-04-03 18:00:02,750 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:00:19,364 - Model - INFO - Mean IoU of batch 0: 0.9998
+2025-04-03 18:00:24,192 - Model - INFO - Mean IoU of batch 1: 1.0000
+2025-04-03 18:00:28,130 - Model - INFO - Mean IoU of batch 2: 1.0000
+2025-04-03 18:00:44,986 - Model - INFO - Mean IoU of batch 3: 0.3739
+2025-04-03 18:01:38,456 - Model - INFO - PARAMETER ...
+2025-04-03 18:01:38,456 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:01:45,620 - Model - INFO - Mean IoU of batch 0: 0.9995
+2025-04-03 18:01:49,498 - Model - INFO - Mean IoU of batch 1: 1.0000
+2025-04-03 18:01:53,157 - Model - INFO - Mean IoU of batch 2: 1.0000
+2025-04-03 18:01:56,364 - Model - INFO - Mean IoU of batch 3: 0.3783
+2025-04-03 18:09:45,284 - Model - INFO - PARAMETER ...
+2025-04-03 18:09:45,284 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:12:27,899 - Model - INFO - PARAMETER ...
+2025-04-03 18:12:27,899 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:13:04,635 - Model - INFO - PARAMETER ...
+2025-04-03 18:13:04,635 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:13:18,370 - Model - INFO - PARAMETER ...
+2025-04-03 18:13:18,370 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 18:14:12,318 - Model - INFO - PARAMETER ...
+2025-04-03 18:14:12,318 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 23:49:29,020 - Model - INFO - PARAMETER ...
+2025-04-03 23:49:29,020 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 23:52:38,571 - Model - INFO - PARAMETER ...
+2025-04-03 23:52:38,571 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 23:52:55,756 - Model - INFO - PARAMETER ...
+2025-04-03 23:52:55,756 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-03 23:53:03,326 - Model - INFO - PARAMETER ...
+2025-04-03 23:53:03,326 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-04 00:07:47,756 - Model - INFO - PARAMETER ...
+2025-04-04 00:07:47,756 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-04 00:08:56,081 - Model - INFO - PARAMETER ...
+2025-04-04 00:08:56,081 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-04 13:19:50,962 - Model - INFO - PARAMETER ...
+2025-04-04 13:19:50,962 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-04 13:20:30,478 - Model - INFO - ------- Per-Class IoU Summary --------
+2025-04-04 13:20:30,479 - Model - INFO - class table, IoU: 0.801
+2025-04-04 13:20:30,479 - Model - INFO - class not_table, IoU: 0.001
+2025-04-04 13:20:30,479 - Model - INFO - ------- IoU Distribution Summary --------
+2025-04-04 13:20:30,479 - Model - INFO - IoU Mean: 0.4012
+2025-04-04 13:20:30,479 - Model - INFO - IoU Std Dev: 0.3998
+2025-04-04 13:20:30,489 - Model - INFO - IoU Median: 0.4012
+2025-04-04 13:20:30,489 - Model - INFO - IoU Max: 0.8009
+2025-04-04 13:20:30,489 - Model - INFO - IoU Min: 0.0014
+2025-04-04 13:20:30,489 - Model - INFO - ------- Final Binary Classification Metrics (Global) --------
+2025-04-04 13:20:30,490 - Model - INFO - Precision: 0.8463
+2025-04-04 13:20:30,490 - Model - INFO - Recall: 0.6247
+2025-04-04 13:20:30,490 - Model - INFO - F1 Score: 0.7188
+2025-04-04 13:25:56,804 - Model - INFO - PARAMETER ...
+2025-04-04 13:25:56,804 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)

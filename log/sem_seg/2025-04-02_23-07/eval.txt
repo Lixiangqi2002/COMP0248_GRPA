@@ -1,0 +1,170 @@
+2025-04-02 23:48:21,903 - Model - INFO - PARAMETER ...
+2025-04-02 23:48:21,903 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-02_23-07', visual=False, test_area=5, num_votes=3)
+2025-04-02 23:48:23,331 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2025-04-03 00:09:53,425 - Model - INFO - PARAMETER ...
+2025-04-03 00:09:53,425 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-02_23-07', visual=False, test_area=5, num_votes=3)
+2025-04-03 00:09:54,840 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2025-04-03 00:09:56,117 - Model - INFO - Mean IoU of batch 0: 0.4127
+2025-04-03 00:09:56,271 - Model - INFO - Mean IoU of batch 1: 0.4130
+2025-04-03 00:09:56,415 - Model - INFO - Mean IoU of batch 2: 0.2861
+2025-04-03 00:09:56,554 - Model - INFO - Mean IoU of batch 3: 0.3641
+2025-04-03 00:09:56,690 - Model - INFO - Mean IoU of batch 4: 0.4009
+2025-04-03 00:09:56,827 - Model - INFO - Mean IoU of batch 5: 0.3882
+2025-04-03 00:09:56,961 - Model - INFO - Mean IoU of batch 6: 0.4167
+2025-04-03 00:09:57,092 - Model - INFO - Mean IoU of batch 7: 1.0000
+2025-04-03 00:09:57,223 - Model - INFO - Mean IoU of batch 8: 0.4238
+2025-04-03 00:09:57,370 - Model - INFO - Mean IoU of batch 9: 0.3463
+2025-04-03 00:09:57,504 - Model - INFO - Mean IoU of batch 10: 0.4223
+2025-04-03 00:09:57,643 - Model - INFO - Mean IoU of batch 11: 0.4213
+2025-04-03 00:09:57,789 - Model - INFO - Mean IoU of batch 12: 0.4326
+2025-04-03 00:09:57,943 - Model - INFO - Mean IoU of batch 13: 0.3811
+2025-04-03 00:09:58,084 - Model - INFO - Mean IoU of batch 14: 0.4464
+2025-04-03 00:09:58,237 - Model - INFO - Mean IoU of batch 15: 0.3701
+2025-04-03 00:09:58,395 - Model - INFO - Mean IoU of batch 16: 0.3900
+2025-04-03 00:09:58,555 - Model - INFO - Mean IoU of batch 17: 0.3185
+2025-04-03 00:09:58,714 - Model - INFO - Mean IoU of batch 18: 0.4272
+2025-04-03 00:09:58,865 - Model - INFO - Mean IoU of batch 19: 0.4741
+2025-04-03 00:09:59,010 - Model - INFO - Mean IoU of batch 20: 0.3898
+2025-04-03 00:09:59,147 - Model - INFO - Mean IoU of batch 21: 0.4177
+2025-04-03 00:09:59,291 - Model - INFO - Mean IoU of batch 22: 0.4360
+2025-04-03 00:09:59,468 - Model - INFO - Mean IoU of batch 23: 0.3504
+2025-04-03 00:09:59,626 - Model - INFO - Mean IoU of batch 24: 0.3672
+2025-04-03 00:09:59,789 - Model - INFO - Mean IoU of batch 25: 0.3881
+2025-04-03 00:09:59,940 - Model - INFO - Mean IoU of batch 26: 0.3544
+2025-04-03 00:10:00,075 - Model - INFO - Mean IoU of batch 27: 0.3226
+2025-04-03 00:10:00,205 - Model - INFO - Mean IoU of batch 28: 0.3969
+2025-04-03 00:10:00,334 - Model - INFO - Mean IoU of batch 29: 0.2694
+2025-04-03 00:10:00,467 - Model - INFO - Mean IoU of batch 30: 0.4880
+2025-04-03 00:10:00,597 - Model - INFO - Mean IoU of batch 31: 0.3680
+2025-04-03 00:10:00,733 - Model - INFO - Mean IoU of batch 32: 1.0000
+2025-04-03 00:10:00,871 - Model - INFO - Mean IoU of batch 33: 0.4250
+2025-04-03 00:10:01,004 - Model - INFO - Mean IoU of batch 34: 0.4294
+2025-04-03 00:10:01,137 - Model - INFO - Mean IoU of batch 35: 0.3295
+2025-04-03 00:10:01,276 - Model - INFO - Mean IoU of batch 36: 0.4039
+2025-04-03 00:10:01,407 - Model - INFO - Mean IoU of batch 37: 0.3690
+2025-04-03 00:10:01,554 - Model - INFO - Mean IoU of batch 38: 0.4739
+2025-04-03 00:10:01,704 - Model - INFO - Mean IoU of batch 39: 0.3091
+2025-04-03 00:10:01,851 - Model - INFO - Mean IoU of batch 40: 1.0000
+2025-04-03 00:10:01,992 - Model - INFO - Mean IoU of batch 41: 0.2894
+2025-04-03 00:10:02,139 - Model - INFO - Mean IoU of batch 42: 0.4876
+2025-04-03 00:10:02,286 - Model - INFO - Mean IoU of batch 43: 0.4171
+2025-04-03 00:10:02,431 - Model - INFO - Mean IoU of batch 44: 0.3853
+2025-04-03 00:10:02,567 - Model - INFO - Mean IoU of batch 45: 0.3589
+2025-04-03 00:10:02,696 - Model - INFO - Mean IoU of batch 46: 0.3577
+2025-04-03 00:10:02,827 - Model - INFO - Mean IoU of batch 47: 1.0000
+2025-04-03 00:10:02,956 - Model - INFO - Mean IoU of batch 48: 1.0000
+2025-04-03 00:10:20,120 - Model - INFO - PARAMETER ...
+2025-04-03 00:10:20,120 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-02_23-07', visual=False, test_area=5, num_votes=3)
+2025-04-03 00:10:21,540 - Model - INFO - ---- EVALUATION WHOLE SCENE----
+2025-04-03 00:10:22,882 - Model - INFO - Mean IoU of batch 0: 0.4142
+2025-04-03 00:10:23,032 - Model - INFO - Mean IoU of batch 1: 0.4207
+2025-04-03 00:10:23,179 - Model - INFO - Mean IoU of batch 2: 0.2872
+2025-04-03 00:10:23,329 - Model - INFO - Mean IoU of batch 3: 0.3625
+2025-04-03 00:10:23,470 - Model - INFO - Mean IoU of batch 4: 0.4030
+2025-04-03 00:10:23,608 - Model - INFO - Mean IoU of batch 5: 0.3891
+2025-04-03 00:10:23,744 - Model - INFO - Mean IoU of batch 6: 0.4173
+2025-04-03 00:10:23,895 - Model - INFO - Mean IoU of batch 7: 1.0000
+2025-04-03 00:10:24,032 - Model - INFO - Mean IoU of batch 8: 0.4211
+2025-04-03 00:10:24,178 - Model - INFO - Mean IoU of batch 9: 0.3457
+2025-04-03 00:10:24,314 - Model - INFO - Mean IoU of batch 10: 0.4275
+2025-04-03 00:10:24,462 - Model - INFO - Mean IoU of batch 11: 0.4161
+2025-04-03 00:10:24,603 - Model - INFO - Mean IoU of batch 12: 0.4307
+2025-04-03 00:10:24,740 - Model - INFO - Mean IoU of batch 13: 0.3773
+2025-04-03 00:10:24,885 - Model - INFO - Mean IoU of batch 14: 0.4493
+2025-04-03 00:10:25,017 - Model - INFO - Mean IoU of batch 15: 0.3636
+2025-04-03 00:10:25,148 - Model - INFO - Mean IoU of batch 16: 0.3928
+2025-04-03 00:10:25,283 - Model - INFO - Mean IoU of batch 17: 0.3165
+2025-04-03 00:10:25,428 - Model - INFO - Mean IoU of batch 18: 0.4293
+2025-04-03 00:10:25,565 - Model - INFO - Mean IoU of batch 19: 0.4727
+2025-04-03 00:10:25,711 - Model - INFO - Mean IoU of batch 20: 0.3879
+2025-04-03 00:10:25,863 - Model - INFO - Mean IoU of batch 21: 0.4154
+2025-04-03 00:10:26,000 - Model - INFO - Mean IoU of batch 22: 0.4335
+2025-04-03 00:10:26,139 - Model - INFO - Mean IoU of batch 23: 0.3565
+2025-04-03 00:10:26,274 - Model - INFO - Mean IoU of batch 24: 0.3649
+2025-04-03 00:10:26,403 - Model - INFO - Mean IoU of batch 25: 0.3928
+2025-04-03 00:10:26,538 - Model - INFO - Mean IoU of batch 26: 0.3546
+2025-04-03 00:10:26,686 - Model - INFO - Mean IoU of batch 27: 0.3204
+2025-04-03 00:10:26,832 - Model - INFO - Mean IoU of batch 28: 0.4022
+2025-04-03 00:10:26,979 - Model - INFO - Mean IoU of batch 29: 0.2748
+2025-04-03 00:10:27,124 - Model - INFO - Mean IoU of batch 30: 0.4890
+2025-04-03 00:10:27,257 - Model - INFO - Mean IoU of batch 31: 0.3708
+2025-04-03 00:10:27,387 - Model - INFO - Mean IoU of batch 32: 1.0000
+2025-04-03 00:10:27,514 - Model - INFO - Mean IoU of batch 33: 0.4233
+2025-04-03 00:10:27,642 - Model - INFO - Mean IoU of batch 34: 0.4289
+2025-04-03 00:10:27,771 - Model - INFO - Mean IoU of batch 35: 0.3298
+2025-04-03 00:10:27,904 - Model - INFO - Mean IoU of batch 36: 0.3969
+2025-04-03 00:10:28,047 - Model - INFO - Mean IoU of batch 37: 0.3694
+2025-04-03 00:10:28,181 - Model - INFO - Mean IoU of batch 38: 0.4734
+2025-04-03 00:10:28,312 - Model - INFO - Mean IoU of batch 39: 0.3077
+2025-04-03 00:10:28,443 - Model - INFO - Mean IoU of batch 40: 1.0000
+2025-04-03 00:10:28,574 - Model - INFO - Mean IoU of batch 41: 0.2898
+2025-04-03 00:10:28,704 - Model - INFO - Mean IoU of batch 42: 0.4865
+2025-04-03 00:10:28,835 - Model - INFO - Mean IoU of batch 43: 0.4169
+2025-04-03 00:10:28,965 - Model - INFO - Mean IoU of batch 44: 0.3801
+2025-04-03 00:10:29,097 - Model - INFO - Mean IoU of batch 45: 0.3602
+2025-04-03 00:10:29,230 - Model - INFO - Mean IoU of batch 46: 0.3552
+2025-04-03 00:10:29,359 - Model - INFO - Mean IoU of batch 47: 1.0000
+2025-04-03 00:10:29,492 - Model - INFO - Mean IoU of batch 48: 1.0000
+2025-04-03 00:10:29,542 - Model - INFO - ------- IoU --------
+2025-04-03 00:10:29,542 - Model - INFO - class ceiling, IoU: 0.801
+2025-04-03 00:10:29,542 - Model - INFO - class floor, IoU: 0.000
+2025-04-03 00:10:29,542 - Model - INFO - Final eval point avg class IoU: 0.4004
+2025-04-03 00:10:29,542 - Model - INFO - Final eval point accuracy: 0.8007
+2025-04-03 00:23:18,657 - Model - INFO - PARAMETER ...
+2025-04-03 00:23:18,657 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-02_23-07', visual=False, test_area=5, num_votes=3)
+2025-04-03 00:24:49,249 - Model - INFO - PARAMETER ...
+2025-04-03 00:24:49,249 - Model - INFO - Namespace(batch_size=32, gpu='0', num_point=4096, log_dir='2025-04-02_23-07', visual=False, test_area=5, num_votes=3)
+2025-04-03 00:24:52,187 - Model - INFO - Mean IoU of batch 0: 0.4135
+2025-04-03 00:24:52,582 - Model - INFO - Mean IoU of batch 1: 0.4151
+2025-04-03 00:24:52,966 - Model - INFO - Mean IoU of batch 2: 0.2872
+2025-04-03 00:24:53,345 - Model - INFO - Mean IoU of batch 3: 0.3604
+2025-04-03 00:24:53,740 - Model - INFO - Mean IoU of batch 4: 0.3986
+2025-04-03 00:24:54,118 - Model - INFO - Mean IoU of batch 5: 0.3885
+2025-04-03 00:24:54,503 - Model - INFO - Mean IoU of batch 6: 0.4152
+2025-04-03 00:24:54,885 - Model - INFO - Mean IoU of batch 7: 1.0000
+2025-04-03 00:24:55,275 - Model - INFO - Mean IoU of batch 8: 0.4249
+2025-04-03 00:24:55,660 - Model - INFO - Mean IoU of batch 9: 0.3484
+2025-04-03 00:24:56,037 - Model - INFO - Mean IoU of batch 10: 0.4264
+2025-04-03 00:24:56,408 - Model - INFO - Mean IoU of batch 11: 0.4193
+2025-04-03 00:24:56,797 - Model - INFO - Mean IoU of batch 12: 0.4297
+2025-04-03 00:24:57,189 - Model - INFO - Mean IoU of batch 13: 0.3788
+2025-04-03 00:24:57,635 - Model - INFO - Mean IoU of batch 14: 0.4484
+2025-04-03 00:24:58,047 - Model - INFO - Mean IoU of batch 15: 0.3691
+2025-04-03 00:24:58,435 - Model - INFO - Mean IoU of batch 16: 0.3882
+2025-04-03 00:24:58,810 - Model - INFO - Mean IoU of batch 17: 0.3146
+2025-04-03 00:24:59,199 - Model - INFO - Mean IoU of batch 18: 0.4278
+2025-04-03 00:24:59,643 - Model - INFO - Mean IoU of batch 19: 0.4718
+2025-04-03 00:25:00,055 - Model - INFO - Mean IoU of batch 20: 0.3878
+2025-04-03 00:25:00,477 - Model - INFO - Mean IoU of batch 21: 0.4163
+2025-04-03 00:25:00,933 - Model - INFO - Mean IoU of batch 22: 0.4364
+2025-04-03 00:25:01,321 - Model - INFO - Mean IoU of batch 23: 0.3546
+2025-04-03 00:25:01,721 - Model - INFO - Mean IoU of batch 24: 0.3641
+2025-04-03 00:25:02,101 - Model - INFO - Mean IoU of batch 25: 0.3909
+2025-04-03 00:25:02,477 - Model - INFO - Mean IoU of batch 26: 0.3531
+2025-04-03 00:25:02,859 - Model - INFO - Mean IoU of batch 27: 0.3204
+2025-04-03 00:25:03,242 - Model - INFO - Mean IoU of batch 28: 0.4012
+2025-04-03 00:25:03,617 - Model - INFO - Mean IoU of batch 29: 0.2723
+2025-04-03 00:25:03,996 - Model - INFO - Mean IoU of batch 30: 0.4869
+2025-04-03 00:25:04,393 - Model - INFO - Mean IoU of batch 31: 0.3752
+2025-04-03 00:25:04,791 - Model - INFO - Mean IoU of batch 32: 1.0000
+2025-04-03 00:25:05,174 - Model - INFO - Mean IoU of batch 33: 0.4238
+2025-04-03 00:25:05,561 - Model - INFO - Mean IoU of batch 34: 0.4265
+2025-04-03 00:25:05,958 - Model - INFO - Mean IoU of batch 35: 0.3371
+2025-04-03 00:25:06,335 - Model - INFO - Mean IoU of batch 36: 0.4009
+2025-04-03 00:25:06,713 - Model - INFO - Mean IoU of batch 37: 0.3693
+2025-04-03 00:25:07,091 - Model - INFO - Mean IoU of batch 38: 0.4720
+2025-04-03 00:25:07,488 - Model - INFO - Mean IoU of batch 39: 0.3069
+2025-04-03 00:25:07,887 - Model - INFO - Mean IoU of batch 40: 1.0000
+2025-04-03 00:25:08,269 - Model - INFO - Mean IoU of batch 41: 0.2872
+2025-04-03 00:25:08,645 - Model - INFO - Mean IoU of batch 42: 0.4861
+2025-04-03 00:25:09,022 - Model - INFO - Mean IoU of batch 43: 0.4200
+2025-04-03 00:25:09,404 - Model - INFO - Mean IoU of batch 44: 0.3865
+2025-04-03 00:25:09,779 - Model - INFO - Mean IoU of batch 45: 0.3638
+2025-04-03 00:25:10,153 - Model - INFO - Mean IoU of batch 46: 0.3590
+2025-04-03 00:25:10,532 - Model - INFO - Mean IoU of batch 47: 1.0000
+2025-04-03 00:25:10,923 - Model - INFO - Mean IoU of batch 48: 1.0000
+2025-04-03 00:25:10,982 - Model - INFO - ------- IoU --------
+2025-04-03 00:25:10,982 - Model - INFO - class table, IoU: 0.801
+2025-04-03 00:25:10,982 - Model - INFO - class not_table, IoU: 0.000
+2025-04-03 00:25:10,982 - Model - INFO - Final eval point avg class IoU: 0.4005
+2025-04-03 00:25:10,982 - Model - INFO - Final eval point accuracy: 0.8010
