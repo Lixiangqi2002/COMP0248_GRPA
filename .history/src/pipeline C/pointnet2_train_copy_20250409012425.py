@@ -2,9 +2,17 @@
 Author: Benny
 Date: Nov 2019
 """
-import argparse
+
+# 将项目根目录添加到 sys.path 中
 import os
-from data_utils.S3DISDataLoader import S3DISDataset
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from models import pointnet2_seg
+
+import argparse
+# from data_utils.S3DISDataLoader import S3DISDataset
+from dataloader import PointCloudDataset
+
 import torch
 import datetime
 import logging
@@ -13,7 +21,7 @@ import sys
 import importlib
 import shutil
 from tqdm import tqdm
-import provider
+from torch.utils.data import DataLoader, random_split
 import numpy as np
 import time
 
@@ -21,13 +29,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
 sys.path.append(os.path.join(ROOT_DIR, 'models'))
 
-classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
-           'board', 'clutter']
+# classes = ['ceiling', 'floor', 'wall', 'beam', 'column', 'window', 'door', 'table', 'chair', 'sofa', 'bookcase',
+#            'board', 'clutter']
+classes = ['table', 'not_table']
 class2label = {cls: i for i, cls in enumerate(classes)}
 seg_classes = class2label
 seg_label_to_cat = {}
 for i, cat in enumerate(seg_classes.keys()):
-    seg_label_to_cat[i] = cat
+    seg_label_to_cat[i] = cat   # {0: 'table', 1: 'not_table'}
 
 def inplace_relu(m):
     classname = m.__class__.__name__
@@ -38,7 +47,7 @@ def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--model', type=str, default='pointnet_sem_seg', help='model name [default: pointnet_sem_seg]')
     parser.add_argument('--batch_size', type=int, default=16, help='Batch Size during training [default: 16]')
-    parser.add_argument('--epoch', default=32, type=int, help='Epoch to run [default: 32]')
+    parser.add_argument('--epoch', default=100, type=int, help='Epoch to run [default: 32]')
     parser.add_argument('--learning_rate', default=0.001, type=float, help='Initial learning rate [default: 0.001]')
     parser.add_argument('--gpu', type=str, default='0', help='GPU to use [default: GPU 0]')
     parser.add_argument('--optimizer', type=str, default='Adam', help='Adam or SGD [default: Adam]')
@@ -53,6 +62,9 @@ def parse_args():
 
 
 def main(args):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
     def log_string(str):
         logger.info(str)
         print(str)
@@ -88,38 +100,67 @@ def main(args):
     log_string('PARAMETER ...')
     log_string(args)
 
-    root = 'data/stanford_indoor3d/'
-    NUM_CLASSES = 13
+    root = 'data/dataset/point_clouds/'  # data/stanford_indoor3d
+    NUM_CLASSES = 2     # 13
     NUM_POINT = args.npoint
     BATCH_SIZE = args.batch_size
 
+    full_dataset = PointCloudDataset("data/dataset/point_clouds/train/train_labels.txt", num_points=4096, augment=True)
+    train_size = int(0.7 * len(full_dataset))
+    val_size = len(full_dataset) - train_size
+    train_dataset, val_dataset = random_split(full_dataset, [train_size, val_size])
+    
     print("start loading training data ...")
-    # Load the training dataset
-    # The dataset is assumed to be in the format of a list of point clouds and their corresponding labels
-    TRAIN_DATASET = S3DISDataset(split='train', data_root=root, num_point=NUM_POINT, test_area=args.test_area, block_size=1.0, sample_rate=1.0, transform=None)
-    print("start loading test data ...")
-    TEST_DATASET = S3DISDataset(split='test', data_root=root, num_point=NUM_POINT, test_area=args.test_area, block_size=1.0, sample_rate=1.0, transform=None)
+    train_loader = DataLoader(
+        train_dataset, 
+        batch_size=BATCH_SIZE, 
+        shuffle=True,
+        num_workers=10,
+        pin_memory=True,
+        drop_last=True,
+        worker_init_fn=lambda x: np.random.seed(x + int(time.time()))
+    )
+    print("start loading validation data ...")
 
-    trainDataLoader = torch.utils.data.DataLoader(TRAIN_DATASET, batch_size=BATCH_SIZE, shuffle=True, num_workers=10,
-                                                  pin_memory=True, drop_last=True,
-                                                  worker_init_fn=lambda x: np.random.seed(x + int(time.time())))
-    
-    testDataLoader = torch.utils.data.DataLoader(TEST_DATASET, batch_size=BATCH_SIZE, shuffle=False, num_workers=10,
-                                                 pin_memory=True, drop_last=True)
-    
-    weights = torch.Tensor(TRAIN_DATASET.labelweights).cuda()
+    val_loader = DataLoader(
+        val_dataset, 
+        batch_size=2, 
+        shuffle=False,
+        num_workers=10,
+        pin_memory=True,
+        drop_last=True
+        )
 
-    log_string("The number of training data is: %d" % len(TRAIN_DATASET))
-    log_string("The number of test data is: %d" % len(TEST_DATASET))
+
+    log_string("The number of training data is: %d" % len(train_dataset))
+    log_string("The number of vaidation data is: %d" % len(val_dataset))
+
+
+    # test_dataset = PointCloudDataset(
+    #     "data/dataset/point_clouds/test/test_labels.txt", 
+    #     num_points=NUM_POINT, 
+    #     test=True)
+    # test_loader = DataLoader(
+    #     test_dataset, 
+    #     batch_size=2, 
+    #     shuffle=False,
+    #     num_workers=10,
+    #     pin_memory=True,
+    #     drop_last=True
+    #     )
+
+    # weights = torch.Tensor(train_dataset.labelweights).cuda()  # 
+
+    
 
     '''MODEL LOADING'''
-    MODEL = importlib.import_module(args.model)
-    shutil.copy('models/%s.py' % args.model, str(experiment_dir))
-    shutil.copy('models/pointnet2_utils.py', str(experiment_dir))
+    # MODEL = importlib.import_module(args.model)     # models.pointnet2_seg 
+    # shutil.copy('models/pointnet2_seg.py', str(experiment_dir))
+    # shutil.copy('models/pointnet2_utils.py', str(experiment_dir))
 
-    model = MODEL.get_model(NUM_CLASSES).cuda()
-    criterion = MODEL.get_loss().cuda()
-    model.apply(inplace_relu)
+    classifier = pointnet2_seg.get_model(NUM_CLASSES).cuda()
+    criterion = pointnet2_seg.get_loss().cuda()
+    classifier.apply(inplace_relu)
 
     def weights_init(m):
         classname = m.__class__.__name__
@@ -133,23 +174,23 @@ def main(args):
     try:
         checkpoint = torch.load(str(experiment_dir) + '/checkpoints/best_model.pth')
         start_epoch = checkpoint['epoch']
-        model.load_state_dict(checkpoint['model_state_dict'])
+        classifier.load_state_dict(checkpoint['model_state_dict'])
         log_string('Use pretrain model')
     except:
         log_string('No existing model, starting training from scratch...')
         start_epoch = 0
-        model = model.apply(weights_init)
+        classifier = classifier.apply(weights_init)
 
     if args.optimizer == 'Adam':
         optimizer = torch.optim.Adam(
-            model.parameters(),
+            classifier.parameters(),
             lr=args.learning_rate,
             betas=(0.9, 0.999),
             eps=1e-08,
             weight_decay=args.decay_rate
         )
     else:
-        optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9)
+        optimizer = torch.optim.SGD(classifier.parameters(), lr=args.learning_rate, momentum=0.9)
 
     def bn_momentum_adjust(m, momentum):
         if isinstance(m, torch.nn.BatchNorm2d) or isinstance(m, torch.nn.BatchNorm1d):
@@ -163,6 +204,8 @@ def main(args):
     global_epoch = 0
     best_iou = 0
 
+    
+
     for epoch in range(start_epoch, args.epoch):
         '''Train on chopped scenes'''
         log_string('**** Epoch %d (%d/%s) ****' % (global_epoch + 1, epoch + 1, args.epoch))
@@ -174,28 +217,32 @@ def main(args):
         if momentum < 0.01:
             momentum = 0.01
         print('BN momentum updated to: %f' % momentum)
-        model = model.apply(lambda x: bn_momentum_adjust(x, momentum))
-        num_batches = len(trainDataLoader)
+        classifier = classifier.apply(lambda x: bn_momentum_adjust(x, momentum))
+        num_batches = len(train_loader)
         total_correct = 0
         total_seen = 0
         loss_sum = 0
-        model = model.train()
+        classifier = classifier.train()
 
-        for i, (points, target) in tqdm(enumerate(trainDataLoader), total=len(trainDataLoader), smoothing=0.9):
+        for i, (points, target) in tqdm(enumerate(train_loader), total=len(train_loader), smoothing=0.9):
             optimizer.zero_grad()
 
-            points = points.data.numpy()
-            points[:, :, :3] = provider.rotate_point_cloud_z(points[:, :, :3])
-            points = torch.Tensor(points)
-            points, target = points.float().cuda(), target.long().cuda()
-            points = points.transpose(2, 1)
+            # points = points.data.numpy() # [B, N, 3]
+            # points[:, :, :3] = provider.rotate_point_cloud_z(points[:, :, :3])
+            # points = torch.Tensor(points)
+            # points, target = points.float().cuda(), target.long().cuda() # [B, N, 3], [B, N]
+            # points = points.transpose(2, 1)  # [B, N, 3]  --> [B, 3, N]
 
-            seg_pred, trans_feat = model(points)   #  model input shape: (B, 9, N) --> model output shape: (B, 2, N)
-            seg_pred = seg_pred.contiguous().view(-1, NUM_CLASSES)
+            points, target = points.to(device), target.to(device).float()  # 
+            points = points.transpose(2, 1)    # [B, N, 9]  --> [B, 9, N]
+            print(f"points shape: {points.shape}, target shape: {target.shape}")
+            seg_pred, trans_feat = classifier(points)   # seg_pred: [B, N, NUM_CLASSES]
+            seg_pred = seg_pred.contiguous().view(-1, NUM_CLASSES)  # seg_pred: [B*N, NUM_CLASSES]
 
             batch_label = target.view(-1, 1)[:, 0].cpu().data.numpy()
-            target = target.view(-1, 1)[:, 0]
-            loss = criterion(seg_pred, target, trans_feat, weights)
+            target = target.view(-1, 1)[:, 0]           # [B*N] -> [B*N, 1]
+
+            loss = criterion(seg_pred, target.long(), trans_feat, weight=None)
             loss.backward()
             optimizer.step()
 
@@ -204,6 +251,7 @@ def main(args):
             total_correct += correct
             total_seen += (BATCH_SIZE * NUM_POINT)
             loss_sum += loss
+            
         log_string('Training mean loss: %f' % (loss_sum / num_batches))
         log_string('Training accuracy: %f' % (total_correct / float(total_seen)))
 
@@ -213,7 +261,7 @@ def main(args):
             log_string('Saving at %s' % savepath)
             state = {
                 'epoch': epoch,
-                'model_state_dict': model.state_dict(),
+                'model_state_dict': classifier.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }
             torch.save(state, savepath)
@@ -221,7 +269,7 @@ def main(args):
 
         '''Evaluate on chopped scenes'''
         with torch.no_grad():
-            num_batches = len(testDataLoader)
+            num_batches = len(val_loader)
             total_correct = 0
             total_seen = 0
             loss_sum = 0
@@ -229,22 +277,22 @@ def main(args):
             total_seen_class = [0 for _ in range(NUM_CLASSES)]
             total_correct_class = [0 for _ in range(NUM_CLASSES)]
             total_iou_deno_class = [0 for _ in range(NUM_CLASSES)]
-            model = model.eval()
+            classifier = classifier.eval()
 
             log_string('---- EPOCH %03d EVALUATION ----' % (global_epoch + 1))
-            for i, (points, target) in tqdm(enumerate(testDataLoader), total=len(testDataLoader), smoothing=0.9):
+            for i, (points, target) in tqdm(enumerate(val_loader), total=len(val_loader), smoothing=0.9):
                 points = points.data.numpy()
                 points = torch.Tensor(points)
                 points, target = points.float().cuda(), target.long().cuda()
                 points = points.transpose(2, 1)
 
-                seg_pred, trans_feat = model(points)
+                seg_pred, trans_feat = classifier(points)
                 pred_val = seg_pred.contiguous().cpu().data.numpy()
                 seg_pred = seg_pred.contiguous().view(-1, NUM_CLASSES)
 
                 batch_label = target.cpu().data.numpy()
                 target = target.view(-1, 1)[:, 0]
-                loss = criterion(seg_pred, target, trans_feat, weights)
+                loss = criterion(seg_pred, target, trans_feat, weight=None)
                 loss_sum += loss
                 pred_val = np.argmax(pred_val, 2)
                 correct = np.sum((pred_val == batch_label))
@@ -259,12 +307,12 @@ def main(args):
                     total_iou_deno_class[l] += np.sum(((pred_val == l) | (batch_label == l)))
 
             labelweights = labelweights.astype(np.float32) / np.sum(labelweights.astype(np.float32))
-            mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=np.float) + 1e-6))
+            mIoU = np.mean(np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=float) + 1e-6))
             log_string('eval mean loss: %f' % (loss_sum / float(num_batches)))
             log_string('eval point avg class IoU: %f' % (mIoU))
             log_string('eval point accuracy: %f' % (total_correct / float(total_seen)))
             log_string('eval point avg class acc: %f' % (
-                np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=np.float) + 1e-6))))
+                np.mean(np.array(total_correct_class) / (np.array(total_seen_class, dtype=float) + 1e-6))))
 
             iou_per_class_str = '------- IoU --------\n'
             for l in range(NUM_CLASSES):
@@ -284,7 +332,7 @@ def main(args):
                 state = {
                     'epoch': epoch,
                     'class_avg_iou': mIoU,
-                    'model_state_dict': model.state_dict(),
+                    'model_state_dict': classifier.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                 }
                 torch.save(state, savepath)
@@ -294,5 +342,6 @@ def main(args):
 
 
 if __name__ == '__main__':
+
     args = parse_args()
     main(args)

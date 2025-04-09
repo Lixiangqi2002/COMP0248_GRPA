@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 from models import pointnet2_seg
 from dataloader import PointCloudDataset
 from torch.utils.data import DataLoader, random_split
-
+import pandas as pd
 import torch
 import logging
 from pathlib import Path
@@ -135,8 +135,6 @@ def main(args):
     visual_dir = Path(visual_dir)
     visual_dir.mkdir(exist_ok=True)
 
-    
-
     '''LOG'''
     args = parse_args()
     logger = logging.getLogger("Model")
@@ -187,13 +185,13 @@ def main(args):
         # scene_id = test_dataset.file_list
         # scene_id = [x[:-4] for x in scene_id]
         # num_batches = len(test_dataset)
-
+        loss_sum = 0
         total_seen_class = [0 for _ in range(NUM_CLASSES)]
         total_correct_class = [0 for _ in range(NUM_CLASSES)]
         total_iou_deno_class = [0 for _ in range(NUM_CLASSES)]
 
         # for batch_idx in range(num_batches):
-        for batch_idx, (points, labels) in tqdm(enumerate(test_loader), total=len(test_loader)):
+        for batch_idx, (points, labels, _) in tqdm(enumerate(test_loader), total=len(test_loader)):
             
             points = points.to(device)              # [B, N, 9]
             labels = labels.to(device).float()      # [B, N]
@@ -215,8 +213,8 @@ def main(args):
                 gt_labels = labels.cpu().numpy()  # [B, N]
                 pred_labels = pred_choice_reshaped.numpy()  # [B, N]
                     
-                visualize(points, labels.cpu())
-                visualize(points, pred_choice_reshaped)
+                # visualize(points, labels.cpu())
+                # visualize(points, pred_choice_reshaped)
 
                 # iou_table = compute_iou(pred_labels, gt_labels)  # iou for table class
                 # iou_background = compute_iou(pred_labels, gt_labels, class_id=0)  # iou for background class
@@ -243,8 +241,9 @@ def main(args):
 
             # calculate the loss
             loss = criterion(seg_pred, labels.view(-1).long(), trans_feat=None, weight=None)
-        
-            correct = (final_pred == labels.cpu().numpy()).sum().item()
+            loss_sum += loss.item() * points.size(0)
+
+            # correct = (final_pred == labels.cpu().numpy()).sum().item()
 
             total_seen_class_tmp = np.zeros(NUM_CLASSES)
             total_correct_class_tmp = np.zeros(NUM_CLASSES)
@@ -268,29 +267,33 @@ def main(args):
             # log_string(f'Mean IoU of batch {batch_idx}: {tmp_iou:.4f}')
             # print(f'Batch {batch_idx}, IoU: {tmp_iou:.4f}')
 
-        # 计算总体的 IoU 和准确率
+
+        log_string('------- Saving Evaluation Results --------')
         IoU = np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=float) + 1e-6)
-
-        log_string('------- Per-Class IoU Summary --------')
-        for l in range(NUM_CLASSES):
-            log_string(f'class {seg_label_to_cat[l]}, IoU: {IoU[l]:.3f}')
-        
-        log_string('------- IoU Distribution Summary --------')
         valid_ious = IoU[np.array(total_seen_class) > 0]
-        log_string(f'IoU Mean: {np.mean(valid_ious):.4f}')
-        log_string(f'IoU Std Dev: {np.std(valid_ious):.4f}')
-        log_string(f'IoU Median: {np.median(valid_ious):.4f}')
-        log_string(f'IoU Max: {np.max(valid_ious):.4f}')
-        log_string(f'IoU Min: {np.min(valid_ious):.4f}')
-
         precision = global_TP / (global_TP + global_FP + 1e-6)
         recall = global_TP / (global_TP + global_FN + 1e-6)
         f1 = 2 * precision * recall / (precision + recall + 1e-6)
+        avg_loss = loss_sum / len(test_loader.dataset)
 
-        log_string('------- Final Binary Classification Metrics (Global) --------')
-        log_string(f'Precision: {precision:.4f}')
-        log_string(f'Recall: {recall:.4f}')
-        log_string(f'F1 Score: {f1:.4f}')
+        results_dict = {
+            "IoU_table": [IoU[1]],  # 假设 class_id=1 是 table
+            "IoU_background": [IoU[0]],
+            "IoU_mean": [np.mean(valid_ious)],
+            "IoU_std": [np.std(valid_ious)],
+            "IoU_median": [np.median(valid_ious)],
+            "IoU_max": [np.max(valid_ious)],
+            "IoU_min": [np.min(valid_ious)],
+            "Precision": [precision],
+            "Recall": [recall],
+            "F1": [f1],
+            "Loss": [avg_loss],
+        }
+        print(f"Results: {results_dict}")
+        
+        df = pd.DataFrame(results_dict)
+        df.to_csv(experiment_dir + '/eval_results.csv', index=False)
+        print(f"Saved evaluation results to {experiment_dir}/eval_results.csv")
 
         print("Evaluation complete!")
 

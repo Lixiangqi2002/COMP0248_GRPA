@@ -145,3 +145,58 @@
 2025-04-04 13:20:30,490 - Model - INFO - F1 Score: 0.7188
 2025-04-04 13:25:56,804 - Model - INFO - PARAMETER ...
 2025-04-04 13:25:56,804 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-08 20:45:42,207 - Model - INFO - PARAMETER ...
+2025-04-08 20:45:42,207 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-08 23:27:36,333 - Model - INFO - PARAMETER ...
+2025-04-08 23:27:36,333 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-08 23:28:49,008 - Model - INFO - ------- Per-Class IoU Summary --------
+2025-04-08 23:28:49,008 - Model - INFO - class table, IoU: 0.801
+2025-04-08 23:28:49,008 - Model - INFO - class not_table, IoU: 0.001
+2025-04-08 23:28:49,008 - Model - INFO - ------- IoU Distribution Summary --------
+2025-04-08 23:28:49,009 - Model - INFO - IoU Mean: 0.4012
+2025-04-08 23:28:49,009 - Model - INFO - IoU Std Dev: 0.3999
+2025-04-08 23:28:49,019 - Model - INFO - IoU Median: 0.4012
+2025-04-08 23:28:49,020 - Model - INFO - IoU Max: 0.8011
+2025-04-08 23:28:49,020 - Model - INFO - IoU Min: 0.0013
+2025-04-08 23:28:49,020 - Model - INFO - ------- Final Binary Classification Metrics (Global) --------
+2025-04-08 23:28:49,020 - Model - INFO - Precision: 0.8327
+2025-04-08 23:28:49,020 - Model - INFO - Recall: 0.6219
+2025-04-08 23:28:49,020 - Model - INFO - F1 Score: 0.7120
+2025-04-08 23:31:38,183 - Model - INFO - PARAMETER ...
+2025-04-08 23:31:38,183 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-08 23:32:48,420 - Model - INFO - ------- Per-Class IoU Summary --------
+2025-04-08 23:32:48,420 - Model - INFO - class table, IoU: 0.801
+2025-04-08 23:32:48,420 - Model - INFO - class not_table, IoU: 0.001
+2025-04-08 23:32:48,420 - Model - INFO - ------- IoU Distribution Summary --------
+2025-04-08 23:32:48,420 - Model - INFO - IoU Mean: 0.4011
+2025-04-08 23:32:48,420 - Model - INFO - IoU Std Dev: 0.3996
+2025-04-08 23:32:48,421 - Model - INFO - IoU Median: 0.4011
+2025-04-08 23:32:48,421 - Model - INFO - IoU Max: 0.8007
+2025-04-08 23:32:48,421 - Model - INFO - IoU Min: 0.0014
+2025-04-08 23:32:48,421 - Model - INFO - ------- Final Binary Classification Metrics (Global) --------
+2025-04-08 23:32:48,421 - Model - INFO - Precision: 0.8374
+2025-04-08 23:32:48,421 - Model - INFO - Recall: 0.6363
+2025-04-08 23:32:48,421 - Model - INFO - F1 Score: 0.7231
+2025-04-08 23:32:48,421 - Model - INFO - ------- Loss Summary --------
+2025-04-08 23:32:48,421 - Model - INFO - Test Average Loss: 0.2718
+2025-04-09 01:33:07,149 - Model - INFO - PARAMETER ...
+2025-04-09 01:33:07,149 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-09 01:34:18,345 - Model - INFO - ------- Per-Class IoU Summary --------
+2025-04-09 01:34:18,346 - Model - INFO - class table, IoU: 0.800
+2025-04-09 01:34:18,346 - Model - INFO - class not_table, IoU: 0.002
+2025-04-09 01:34:18,346 - Model - INFO - ------- IoU Distribution Summary --------
+2025-04-09 01:34:18,346 - Model - INFO - IoU Mean: 0.4007
+2025-04-09 01:34:18,346 - Model - INFO - IoU Std Dev: 0.3992
+2025-04-09 01:34:18,347 - Model - INFO - IoU Median: 0.4007
+2025-04-09 01:34:18,347 - Model - INFO - IoU Max: 0.7999
+2025-04-09 01:34:18,347 - Model - INFO - IoU Min: 0.0015
+2025-04-09 01:34:18,347 - Model - INFO - ------- Final Binary Classification Metrics (Global) --------
+2025-04-09 01:34:18,347 - Model - INFO - Precision: 0.8393
+2025-04-09 01:34:18,347 - Model - INFO - Recall: 0.6230
+2025-04-09 01:34:18,347 - Model - INFO - F1 Score: 0.7151
+2025-04-09 01:34:18,347 - Model - INFO - ------- Loss Summary --------
+2025-04-09 01:34:18,347 - Model - INFO - Test Average Loss: 0.2790
+2025-04-09 01:34:18,347 - Model - INFO - ------- Saving Evaluation Results --------
+2025-04-09 01:59:04,752 - Model - INFO - PARAMETER ...
+2025-04-09 01:59:04,753 - Model - INFO - Namespace(batch_size=1, gpu='0', num_point=4096, log_dir='2025-04-03_17-05', visual=False, test_area=5, num_votes=3)
+2025-04-09 02:00:18,149 - Model - INFO - ------- Saving Evaluation Results --------
