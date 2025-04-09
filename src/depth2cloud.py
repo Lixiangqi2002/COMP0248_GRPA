@@ -23,11 +23,16 @@ class point_cloud_generator():
         self.cy = cy
         self.scalingfactor = scalingfactor
         self.rgb = Image.open(rgb_file)
+        rgb_width, rgb_height = self.rgb.size
         if depth_file.endswith(".npy"):
             self.depth = np.load(depth_file)#.T  # shape: (H, W)
             self.depth_type = "npy"
         else:
-            self.depth = np.asarray(Image.open(depth_file).convert('I'))#.T  # uint16 PNG
+            depth_raw = Image.open(depth_file).convert('I')
+            if depth_raw.size != self.rgb.size:
+                print(f"[Resize] Depth image size {depth_raw.size} -> {self.rgb.size}")
+                depth_raw = depth_raw.resize((rgb_width, rgb_height), resample=Image.NEAREST)
+            self.depth = np.asarray(depth_raw)
             self.depth_type = "png"
         # self.depth = Image.open(depth_file).convert('I')  # uint16
         self.width = self.rgb.size[0]
@@ -165,9 +170,10 @@ def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, out
         mask = np.zeros((480, 640), dtype=np.uint8)
     else:
         mask = create_polygon_mask(polygon_list, height=480, width=640)
+    
     pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy)
-    pcg.calculate(polygon_mask=mask)
-    # pcg.calculate(polygon_mask=None)
+    # pcg.calculate(polygon_mask=mask)
+    pcg.calculate(polygon_mask=None)
     pcg.write_ply()
     pcg.save_npy()
     # pcg.show_point_cloud(tag='mask')
@@ -237,6 +243,45 @@ def process_all(base_dir, output_dir):
         # break    
 
 
+def process_all_single_folder(image_root, depth_root, intrinsic_path, output_dir):
+ 
+    dir_name = 'test'
+
+    if not os.path.exists(intrinsic_path):
+        raise FileNotFoundError(f"intrinsics.txt not found in {intrinsic_path}")
+
+    fx, fy, cx, cy = read_intrinsics_from_txt(intrinsic_path)
+
+    scenes = [d for d in os.listdir(image_root) if os.path.isdir(os.path.join(image_root, d))]
+
+    for scene in scenes:
+        print(f"Processing scene: {scene}")
+
+        image_dir = os.path.join(image_root, scene)
+        depth_dir = os.path.join(depth_root, scene)
+
+        if not os.path.exists(image_dir) or not os.path.exists(depth_dir):
+            print(f"Skipping scene {scene} due to missing image or depth folder.")
+            continue
+
+        image_files = sorted(os.listdir(image_dir))
+        depth_files = sorted(os.listdir(depth_dir))
+
+        if len(image_files) != len(depth_files):
+            print(f"Warning: Mismatched image/depth count in scene {scene}")
+
+        tabletop_labels = [None] * len(image_files)
+
+        for polygon_list, img_file, depth_file in zip(tabletop_labels, image_files, depth_files):
+            rgb_path = os.path.join(image_dir, img_file)
+            d_path = os.path.join(depth_dir, depth_file)
+            filename_no_ext = os.path.splitext(img_file)[0].replace("rgb_", "")
+
+            out_prefix = os.path.join(output_dir, dir_name, f"{scene}_{filename_no_ext}")
+            generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix)
+
+
+
 def generate_label_file(split_dir, output_file):
     entries = []
     for root, _, files in os.walk(split_dir):
@@ -252,6 +297,7 @@ def generate_label_file(split_dir, output_file):
     with open(output_file, "w") as f:
         f.writelines(entries)
     print(f"Saved {len(entries)} entries to {output_file}")
+
 
 def copy_scene_images(scene_list, out_img_dir, out_depth_dir, src_root):
     for scene in scene_list:
@@ -285,6 +331,7 @@ def copy_scene_images(scene_list, out_img_dir, out_depth_dir, src_root):
                 shutil.copy(src_img, out_img)
                 shutil.copy(src_depth, out_depth)
 
+
 def organize_rgbd_dataset(src_root, train_scenes,test_scenes,dst_root: str = "data/dataset/depth_img"):
     src_root = Path(src_root)
     dst_root = Path(dst_root)
@@ -304,27 +351,211 @@ def organize_rgbd_dataset(src_root, train_scenes,test_scenes,dst_root: str = "da
     print(f"  {out_train_img.parent} and {out_test_img.parent}")
 
 
+
+def extract_number(filename):
+    import re
+    match = re.search(r'\d+', filename)
+    return match.group() if match else None
+
+
+
+def copy_flat_scene_images(scene_names, out_img_dir, out_depth_dir, src_root):
+    for scene in scene_names:
+        image_dir = Path(src_root) / 'image' / scene
+        depth_dir = Path(src_root) / 'depth' / scene
+
+        if not image_dir.exists() or not depth_dir.exists():
+            print(f"[Warning] Missing: {image_dir} or {depth_dir}")
+            continue
+   
+        img_files = sorted(os.listdir(image_dir))
+        depth_files = sorted(os.listdir(depth_dir))
+
+        img_basenames = {extract_number(f): f for f in img_files}
+        depth_basenames = {extract_number(f): f for f in depth_files}
+        common = sorted(set(img_basenames.keys()) & set(depth_basenames.keys()))
+
+        print(f"Processing scene: {scene}")
+        print(f"  {len(common)} common images found")
+        for name in common:
+            src_img = image_dir / img_basenames[name]
+            src_depth = depth_dir / depth_basenames[name]
+
+            out_img = out_img_dir / f"{scene}_{img_basenames[name]}"
+            out_depth = out_depth_dir / f"{scene}_{depth_basenames[name]}"
+
+            shutil.copy(src_img, out_img)
+            shutil.copy(src_depth, out_depth)
+
+
+
+def organize_rgbd_dataset_single_dataset(src_root, test_scenes, dst_root: str = "data/dataset/depth_img"):
+    src_root = Path(src_root)
+    dst_root = Path(dst_root)
+    
+    out_test_img = dst_root / "test" / "image"
+    out_test_depth = dst_root / "test" / "depth"
+    
+    for p in [out_test_img, out_test_depth]:
+        p.mkdir(parents=True, exist_ok=True)
+
+    print(f"src_root: {src_root}")
+    print(f"out_test_img: {out_test_img}")
+    copy_flat_scene_images(test_scenes, out_test_img, out_test_depth, src_root)
+
+    print(f"Done: RGB-D dataset organized into: {out_test_img.parent}")
+
+
+
+# def render_clean_depth_from_tsdf(image_dir, depth_dir, intrinsic_path, output_dir, scene, sample_rgb_id):
+#     fx, fy, cx, cy = read_intrinsics_from_txt(intrinsic_path)
+
+#     sample_rgb = cv2.imread(str(Path(image_dir) / scene / f"rgb_{sample_rgb_id}.jpg"))
+#     h, w, _ = sample_rgb.shape
+#     intrinsic = o3d.camera.PinholeCameraIntrinsic(w, h, fx, fy, cx, cy)
+
+#     tsdf = o3d.pipelines.integration.UniformTSDFVolume(
+#         length=4.0,
+#         resolution=512,
+#         sdf_trunc=0.04,
+#         color_type=o3d.pipelines.integration.TSDFVolumeColorType.RGB8
+#     )
+
+#     rgb_files = sorted((Path(image_dir) / scene).glob("*.jpg"))
+#     depth_files = sorted((Path(depth_dir) / scene).glob("*.png"))
+#     keys = [f.stem.split('_')[-1] for f in rgb_files]
+    
+#     for k in keys:
+#         print(f"Processing frame: {k}")
+#         rgb = o3d.io.read_image(str(Path(image_dir) / scene / f"rgb_{k}.jpg"))
+#         raw_depth = cv2.imread(str(Path(depth_dir) / scene / f"depth_{k}.png"), cv2.IMREAD_UNCHANGED)
+#         resized_depth = cv2.resize(raw_depth, (w, h), interpolation=cv2.INTER_NEAREST)
+#         depth = o3d.geometry.Image(resized_depth.astype(np.uint16))
+
+#         rgbd = o3d.geometry.RGBDImage.create_from_color_and_depth(
+#             rgb, depth, depth_scale=1000.0, depth_trunc=3.0, convert_rgb_to_intensity=False
+#         )
+
+#         pose = np.eye(4)
+#         tsdf.integrate(rgbd, intrinsic, pose)
+
+#         mesh = tsdf.extract_triangle_mesh()
+#         mesh.compute_vertex_normals()
+
+#         scene_o3d = o3d.t.geometry.RaycastingScene()
+#         scene_o3d.add_triangles(o3d.t.geometry.TriangleMesh.from_legacy(mesh))
+#         # numpy → Open3D Tensor
+#         intrinsic_np = np.array(intrinsic.intrinsic_matrix, dtype=np.float32)
+#         extrinsic_np = np.eye(4, dtype=np.float32)
+
+#         intrinsic_tensor = o3d.core.Tensor(intrinsic_np, dtype=o3d.core.Dtype.Float32)
+#         extrinsic_tensor = o3d.core.Tensor(extrinsic_np, dtype=o3d.core.Dtype.Float32)
+
+
+#         rays = o3d.t.geometry.RaycastingScene.create_rays_pinhole(
+#             intrinsic_matrix=intrinsic_tensor,
+#             extrinsic_matrix=extrinsic_tensor,
+#             width_px=w,
+#             height_px=h
+#         )
+#         ans = scene_o3d.cast_rays(rays)
+#         depth_np = ans['t_hit'].numpy()
+#         depth_np[np.isinf(depth_np)] = 0.0
+
+#         depth_mm = (depth_np * 1000).astype(np.uint16)
+#         output_path = Path(output_dir)
+#         output_path.mkdir(parents=True, exist_ok=True)
+
+#         out_file = output_path / scene 
+#         out_file.mkdir(parents=True, exist_ok=True)
+#         o3d.io.write_image(str(out_file / f"depth_{k}_clean.png"), o3d.geometry.Image(depth_mm)
+
+
+
+
+# def render_clean_depth_map(image_dir, depth_dir, output_dir, scene):
+#     rgb_files = sorted((Path(image_dir) / scene).glob("*.jpg"))
+#     # h, w, _ = cv2.imread(str(Path(image_dir) / scene / f"rgb_{sample_rgb_id}.jpg")).shape
+#     depth_files = sorted((Path(depth_dir) / scene).glob("*.png"))
+#     keys = [f.stem.split('_')[-1] for f in rgb_files]
+    
+#     for k in keys:
+#         print(f"Processing frame: {k}")
+#         rgb = cv2.imread(str(Path(image_dir) / scene / f"rgb_{k}.jpg"))
+#         raw_depth = cv2.imread(str(Path(depth_dir) / scene / f"depth_{k}.png"), cv2.IMREAD_UNCHANGED)
+#         h, w, _ = rgb.shape
+#         resized_depth = cv2.resize(raw_depth, (w, h), interpolation=cv2.INTER_NEAREST)
+#         depth = resized_depth.astype(np.uint16)
+
+#         depth_median = cv2.medianBlur(depth, 5)
+#         mask = (depth_median == 0).astype(np.uint8)
+#         depth_8u = cv2.normalize(depth_median, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+#         depth_inpaint = cv2.inpaint(depth_8u, mask, inpaintRadius=5, flags=cv2.INPAINT_NS)
+
+#         depth_filled = cv2.normalize(depth_inpaint, None, 0, np.max(depth), cv2.NORM_MINMAX).astype(np.uint16)
+#         output_path = Path(output_dir)
+#         output_path.mkdir(parents=True, exist_ok=True)
+#         out_file = output_path / scene 
+#         out_file.mkdir(parents=True, exist_ok=True)
+#         cv2.imwrite(out_file / f"depth_{k}_clean.png", depth_filled)
+
+
 if __name__ == '__main__':
-    base_path = "data/CW2-Dataset/data"
+    data = "Realsense" # 'CW2' or "Realsense"
+    if data == 'CW2':
+        ### CW2 dataset ###
+        base_path = "data/CW2-Dataset/data"
 
-    # point cloud dataset orgnization
-    output_path = "data/dataset/point_clouds"
-    process_all(base_path, output_path)
-  
-    generate_label_file("data/dataset/point_clouds/train", "data/dataset/point_clouds/train/train_labels.txt")
-    generate_label_file("data/dataset/point_clouds/test", "data/dataset/point_clouds/test/test_labels.txt")
+        # point cloud dataset orgnization
+        output_path = "data/dataset/point_clouds"
+        process_all(base_path, output_path)
+    
+        generate_label_file("data/dataset/point_clouds/train", "data/dataset/point_clouds/train/train_labels.txt")
+        generate_label_file("data/dataset/point_clouds/test", "data/dataset/point_clouds/test/test_labels.txt")
 
-    # RGB-D dataset organization
-    output_image_path = "data/dataset/depth_img"
-    train_scenes = [
-        'mit_32_d507', 'mit_76_459', 'mit_76_studyroom',
-        'mit_gym_z_squash', 'mit_lab_hj'
-    ]
-    test_scenes = ['harvard_c5', 'harvard_c6', 'harvard_c11', 'harvard_tea_2']
+        # RGB-D dataset organization
+        output_image_path = "data/dataset/depth_img"
+        train_scenes = [
+            'mit_32_d507', 'mit_76_459', 'mit_76_studyroom',
+            'mit_gym_z_squash', 'mit_lab_hj'
+        ]
+        test_scenes = ['harvard_c5', 'harvard_c6', 'harvard_c11', 'harvard_tea_2']
 
-    organize_rgbd_dataset(
-        src_root=base_path,
-        train_scenes=train_scenes,
-        test_scenes=test_scenes,
-        dst_root=output_image_path
-    )
+        organize_rgbd_dataset(
+            src_root=base_path,
+            train_scenes=train_scenes,
+            test_scenes=test_scenes,
+            dst_root=output_image_path
+        )
+
+    else:
+        ### Realsense dataset ###
+        
+        # scene_set = ["big_black_round_table", "big_black_square_table", "big_square_white_table", "big_yellow_square_table", "no_table", "small_round_black_table"]
+        # id_set = [259,168, 35, 392, 151, 43]
+        # for i in range(len(scene_set)):
+        #     render_clean_depth_map(
+        #         image_dir="data/realsense/image",
+        #         depth_dir="data/realsense/depth",
+        #         # intrinsic_path="data/realsense/intrinsics.txt",
+        #         output_dir="data/realsense/depth_clean",
+        #         scene=scene_set[i],
+        #         # sample_rgb_id = id_set[i],
+        #     )
+        
+        # point cloud dataset organization
+        base_path_realsense = "data/realsense"
+        output_path_realsense = "data/dataset/realsense_point_clouds"
+        # process_all_single_folder(base_path_realsense, output_path_realsense)
+        image_root = os.path.join(base_path_realsense, 'image')
+        depth_root = os.path.join(base_path_realsense, 'depth')
+        intrinsic_path = os.path.join(base_path_realsense, 'intrinsics.txt')
+        # generate_label_file(image_root, depth_root, intrinsic_path,  "data/dataset/realsense_point_clouds/test_labels.txt")
+        
+        scene_names = os.listdir(os.path.join(base_path_realsense+'/image'))
+        print(scene_names)
+        organize_rgbd_dataset_single_dataset(
+            src_root=base_path_realsense,
+            test_scenes=scene_names,
+            dst_root='data/dataset/realsense_depth_img'
+        )

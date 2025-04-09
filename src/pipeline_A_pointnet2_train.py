@@ -92,7 +92,7 @@ def main(args):
         total_correct = 0
         total_seen = 0
 
-        for pc, label in tqdm(train_loader):
+        for pc, label, _ in tqdm(train_loader):
  
             pc = pc.transpose(2, 1)
             
@@ -112,6 +112,7 @@ def main(args):
             total_seen += label.size(0)
 
         train_acc = total_correct / total_seen
+        train_loss = total_loss / total_seen
         print(f"Epoch {epoch+1}: Train Loss: {total_loss / total_seen:.4f} | Train Accuracy: {train_acc:.4f}")
         logger.info(f"Epoch {epoch+1}: Train Loss: {total_loss / total_seen:.4f} | Train Accuracy: {train_acc:.4f}")
 
@@ -122,7 +123,7 @@ def main(args):
         with torch.no_grad():
             correct = 0
             total = 0
-            for pc, label in val_loader:
+            for pc, label , _  in val_loader:
                 pc = pc.transpose(2, 1)
                 if not args.use_cpu:
                     pc, label = pc.cuda(), label.cuda()
@@ -152,7 +153,7 @@ def main(args):
 
         train_accuracies.append(train_acc)
         val_accuracies.append(acc)
-        train_losses.append(total_loss / total_seen)
+        train_losses.append(train_loss)
         val_losses.append(val_loss)
 
     print(f"Training completed. Best Val Accuracy: {best_acc:.4f}")

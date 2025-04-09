@@ -14,15 +14,22 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
-def parse_args():
-    parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline A')
+def parse_args(data):
+    if data == "CW2":
+        parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline A')
+        parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_A', help='Experiment log directory')
+        parser.add_argument('--test_label_path', type=str, default='data/dataset/point_clouds/test/test_labels.txt', help='Path to test label file')
+    else:
+        parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline A RealSense')
+        parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_A_realsense', help='Experiment log directory')
+        parser.add_argument('--test_label_path', type=str, default='data/dataset/realsense_point_clouds/test_labels.txt', help='Path to test label file')
+
     parser.add_argument('--use_cpu', action='store_true', default=False, help='Use CPU')
     parser.add_argument('--gpu', type=str, default='0', help='GPU device')
-    parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--num_point', type=int, default=2048, help='Point Number')
-    parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_A', help='Experiment log directory')
-    parser.add_argument('--test_label_path', type=str, default='data/dataset/point_clouds/test/test_labels.txt', help='Path to test label file')
     return parser.parse_args()
+
 
 
 def test(model, loader, logger, path):
@@ -33,16 +40,17 @@ def test(model, loader, logger, path):
     y_pred = []
 
     with torch.no_grad():
-        for pc, label in tqdm(loader):
+        for idx, (pc, label, filename) in enumerate(tqdm(loader)):
             pc = pc.transpose(2, 1)
-            if not args.use_cpu:
-                pc, label = pc.cuda(), label.cuda()
+            pc, label = pc.cuda(), label.cuda()
             pred, _ = model(pc)
             pred_choice = pred.max(1)[1]
 
             y_true.extend(label.cpu().numpy())
             y_pred.extend(pred_choice.cpu().numpy())
-            
+            for f in filename:
+                # logger.info(f"File: {f}, Predicted {pred_choice.cpu().numpy()==label.cpu().numpy()}")
+                print(f"File: {f}, Predicted {pred_choice.cpu().numpy()==label.cpu().numpy()}")
             correct += pred_choice.eq(label).sum().item()
             total += label.size(0)
 
@@ -65,9 +73,9 @@ def plot_confusion_matrix(y_true, y_pred, save_path):
     plt.ylabel('True Label')
     plt.title('Confusion Matrix')
     plt.tight_layout()
-    plt.show()
+    # plt.show()
     plt.savefig(save_path)
-    # plt.close()
+    plt.close()
 
 
 def main(args):
@@ -75,7 +83,7 @@ def main(args):
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     experiment_dir = Path('./log/').joinpath(args.log_dir)
-    checkpoint_path = experiment_dir.joinpath('checkpoints/best_model.pth')
+    checkpoint_path = 'log/binary_pointnet2_pipeline_A/checkpoints/best_model.pth'
 
     logger = logging.getLogger("Test")
     logger.setLevel(logging.INFO)
@@ -108,5 +116,6 @@ def main(args):
 
 if __name__ == '__main__':
     global args
-    args = parse_args()
+    data = "Realsense" # "CW2" or "Realsense"
+    args = parse_args(data)
     main(args)

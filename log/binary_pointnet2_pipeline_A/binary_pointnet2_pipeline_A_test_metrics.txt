@@ -3,36 +3,58 @@ Loading model...
 Running evaluation...
 
 Confusion Matrix:
-[[24  4]
- [20 50]]
+[[20  8]
+ [ 4 66]]
 
 Classification Report:
               precision    recall  f1-score   support
 
-    No Table     0.5455    0.8571    0.6667        28
-       Table     0.9259    0.7143    0.8065        70
+    No Table     0.8333    0.7143    0.7692        28
+       Table     0.8919    0.9429    0.9167        70
 
-    accuracy                         0.7551        98
-   macro avg     0.7357    0.7857    0.7366        98
-weighted avg     0.8172    0.7551    0.7665        98
+    accuracy                         0.8776        98
+   macro avg     0.8626    0.8286    0.8429        98
+weighted avg     0.8752    0.8776    0.8745        98
 
-Test Accuracy: 0.7551
+Test Accuracy: 0.8776
 Loading test dataset...
 Loading model...
 Running evaluation...
 
 Confusion Matrix:
-[[25  3]
- [21 49]]
+[[20  8]
+ [ 3 67]]
 
 Classification Report:
               precision    recall  f1-score   support
 
-    No Table     0.5435    0.8929    0.6757        28
-       Table     0.9423    0.7000    0.8033        70
+    No Table     0.8696    0.7143    0.7843        28
+       Table     0.8933    0.9571    0.9241        70
 
-    accuracy                         0.7551        98
-   macro avg     0.7429    0.7964    0.7395        98
-weighted avg     0.8284    0.7551    0.7668        98
+    accuracy                         0.8878        98
+   macro avg     0.8814    0.8357    0.8542        98
+weighted avg     0.8865    0.8878    0.8842        98
 
-Test Accuracy: 0.7551
+Test Accuracy: 0.8878
+Loading test dataset...
+Loading model...
+Running evaluation...
+
+Confusion Matrix:
+[[20  8]
+ [ 4 66]]
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    No Table     0.8333    0.7143    0.7692        28
+       Table     0.8919    0.9429    0.9167        70
+
+    accuracy                         0.8776        98
+   macro avg     0.8626    0.8286    0.8429        98
+weighted avg     0.8752    0.8776    0.8745        98
+
+Test Accuracy: 0.8776
+Loading test dataset...
+Loading model...
+Running evaluation...

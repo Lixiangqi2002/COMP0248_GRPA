@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.append(os.path.abspath('log/Depth_Anything_V2')) 
 from depth_anything_v2.dpt import DepthAnythingV2
 import pickle
-from depth2cloud import generate_label_file, generate_point_cloud
+from depth2cloud import generate_label_file, generate_point_cloud, read_intrinsics_from_txt
 from PIL import Image
 import open3d as o3d
 import matplotlib.pyplot as plt
@@ -19,15 +19,26 @@ from pipeline_A_pointnet2_test import main as test
 import argparse
 
 def find_closest_gt(pred_stem, gt_files):
-    pred_id = int(pred_stem.split('-')[-1])
-    min_diff = float('inf')
-    closest = None
-    for f in gt_files:
-        gt_id = int(f.stem.split('-')[-1])
-        diff = abs(gt_id - pred_id)
-        if diff < min_diff:
-            min_diff = diff
-            closest = f
+    if "-" not in pred_stem:
+        pred_id = int(pred_stem.split('_')[-1])
+        min_diff = float('inf')
+        closest = None
+        for f in gt_files:
+            gt_id = int(f.stem.split('_')[-1])
+            diff = abs(gt_id - pred_id)
+            if diff < min_diff:
+                min_diff = diff
+                closest = f
+    else:
+        pred_id = int(pred_stem.split('-')[-1])
+        min_diff = float('inf')
+        closest = None
+        for f in gt_files:
+            gt_id = int(f.stem.split('-')[-1])
+            diff = abs(gt_id - pred_id)
+            if diff < min_diff:
+                min_diff = diff
+                closest = f
     return closest
 
 
@@ -70,18 +81,20 @@ def eval_depth_all(pred_dir, gt_dir, verbose=False):
     for pred_file in tqdm(pred_files, desc="Evaluating depth predictions"):
         pred = np.load(pred_file)
         gt_file = find_closest_gt(pred_file.stem, gt_files)
-        # print(gt_file)
-        # break
         if gt_file is None:
             continue
         gt_xyz = np.load(gt_file)  # (N, 3)
-  
+
         try:
-            gt_depth = gt_xyz.astype(np.float32) 
+            gt_depth = gt_xyz.astype(np.float32)
         except:
             if verbose:
                 print(f"[!] GT shape mismatch for {gt_file}")
             continue
+
+        # Resize pred to match the shape of gt_depth
+        if pred.shape != gt_depth.shape:
+            pred = cv2.resize(pred, (gt_depth.shape[1], gt_depth.shape[0]), interpolation=cv2.INTER_LINEAR)
 
         metrics = evaluate_depth_metrics(pred, gt_depth)
         results.append(metrics)
@@ -112,7 +125,9 @@ def predict_and_save_depths(
     encoder: str = "vits",
     input_size: int = 518,
     vis_range=(0.1, 50.0),
-    cmap: str = "gray"
+    cmap: str = "gray",
+    gt_base_Path: str = "data/dataset/point_clouds",
+    epsilon: int = 200,
 ):
     DEVICE = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
 
@@ -134,8 +149,8 @@ def predict_and_save_depths(
     save_dir.mkdir(parents=True, exist_ok=True)
 
     mode = "train" if "train" in str(rgb_dir) else "test"
-    gt_base = Path(f"data/dataset/point_clouds/{mode}")
-
+    gt_base = Path(gt_base_Path + f"/{mode}")
+    # print(f"GT base path: {gt_base}")
     images = sorted(rgb_dir.glob("*.jpg"))
     vmin, vmax = vis_range
 
@@ -143,15 +158,22 @@ def predict_and_save_depths(
         image = cv2.imread(str(img_path))[:, :, ::-1]
         pred = depth_anything.infer_image(image, input_size)  # inverse depth (relative)
 
-        gt_npy_path = gt_base / f"{img_path.stem}_full.npy"
-        if not gt_npy_path.exists():
-            print(f"[!] GT not found: {gt_npy_path}, skipping")
+        gt_npy_path = None
+        for gt_file in gt_base.glob("*.npy"):
+            id_img = str(img_path.stem.split('_')[-1])
+            if gt_file.name.endswith(id_img+"_full.npy"):
+                gt_npy_path = gt_file
+                break
+            
+
+        if gt_npy_path is None:
+            print(f"[!] GT not found for: {img_path.stem}, skipping")
             continue
         gt = np.load(gt_npy_path)
 
         gt_median = np.median(-gt[:, 2]) 
-        # print(f"GT median: {gt_median}") 
-        pred_depth = 1.0 / (pred + 200)
+        print(f"GT median: {gt_median}") 
+        pred_depth = 1.0 / (pred + epsilon)
         pred_median = np.median(pred_depth)
         # print(f"Pred median: {pred_median}")
         scale = gt_median / pred_median
@@ -160,9 +182,9 @@ def predict_and_save_depths(
         npy_path = save_dir / f"{img_path.stem}.npy"
         np.save(npy_path, depth_map)
 
-        clipped = np.clip(depth_map, vmin, vmax)
-        norm = (clipped - vmin) / (vmax - vmin)
-        depth_vis = (norm * 255).astype(np.uint8)
+        # clipped = np.clip(depth_map, vmin, vmax)
+        # norm = (clipped - vmin) / (vmax - vmin)
+        depth_vis = (depth_map * 255).astype(np.uint8)
         depth_vis = np.repeat(depth_vis[..., np.newaxis], 3, axis=-1)
         vis_path = save_dir / f"{img_path.stem}.png"
         cv2.imwrite(str(vis_path), depth_vis)
@@ -246,7 +268,38 @@ def generate_point_cloud_depth_prediction():
                 fx=fx, fy=fy, cx=cx, cy=cy,
                 output_prefix_labels=str(out_prefix) + "/" + key
             )
-            # break
+
+
+def process_all_single_folder(image_root, depth_root, intrinsic_path, output_dir):
+ 
+    dir_name = 'test'
+
+    if not os.path.exists(intrinsic_path):
+        raise FileNotFoundError(f"intrinsics.txt not found in {intrinsic_path}")
+
+    fx, fy, cx, cy = read_intrinsics_from_txt(intrinsic_path)
+    print(f"Intrinsic parameters: fx={fx}, fy={fy}, cx={cx}, cy={cy}")
+    image_files = sorted(os.listdir(image_root))
+    depth_files = sorted(os.listdir(depth_root))
+    image_basenames = {os.path.splitext(f)[0]: f for f in image_files}
+    depth_basenames = {os.path.splitext(f)[0]: f for f in depth_files}
+    common_keys = sorted(set(image_basenames.keys()) & set(depth_basenames.keys()))
+
+    print(f"Found {len(common_keys)} matched image/depth pairs.")
+
+    for key in common_keys:
+        img_file = image_basenames[key]
+        depth_file = depth_basenames[key]
+
+        print(f"Processing {img_file} and {depth_file}")
+        rgb_path = os.path.join(image_root, img_file)
+        d_path = os.path.join(depth_root, depth_file)
+
+        filename_no_ext = key
+        out_prefix = os.path.join(output_dir, dir_name, f"{filename_no_ext}")
+
+        generate_point_cloud(rgb_path, d_path, None, fx, fy, cx, cy, out_prefix)
+
 
 def convert_depth_png_to_npy(input_dir, output_dir, divisor=1000.0):
     input_dir = Path(input_dir)
@@ -281,60 +334,93 @@ def parse_args_train():
 
 
 def parse_args_test():
-    parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline B')
+    if dataset == "CW2":
+        parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline B')
+        parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_B', help='Experiment log directory')
+        parser.add_argument('--test_label_path', type=str, default='data/dataset/point_clouds/test/test_labels.txt', help='Path to test label file')
+    else:
+        parser = argparse.ArgumentParser('PointNet2 Binary Classification Testing in Pipeline B RealSense')
+        parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_B_realsense', help='Experiment log directory')
+        parser.add_argument('--test_label_path', type=str, default='data/dataset/realsense_point_clouds/test_labels.txt', help='Path to test label file')
+
     parser.add_argument('--use_cpu', action='store_true', default=False, help='Use CPU')
     parser.add_argument('--gpu', type=str, default='0', help='GPU device')
-    parser.add_argument('--batch_size', type=int, default=4, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--num_point', type=int, default=2048, help='Point Number')
-    parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_B', help='Experiment log directory')
-    parser.add_argument('--test_label_path', type=str, default='data/dataset/depth_prediction_point_clouds/test/point_clouds/test_labels.txt', help='Path to test label file')
-    return parser.parse_args()
-
+    
+    return parser.parse_args() 
+    
 
 if __name__ == '__main__':
-   
-    # predict_and_save_depths(
-    #     rgb_dir="data/dataset/depth_img/train/image",
-    #     save_dir="data/dataset/depth_prediction_point_clouds/train/depth",
-    #     encoder="vitl"
-    # )
+    dataset = "RealSense"  # "RealSense" or "CW2"
+    if dataset == "CW2":
+        ### CW2 data ###
+        predict_and_save_depths(
+            rgb_dir="data/dataset/depth_img/train/image",
+            save_dir="data/dataset/depth_prediction_point_clouds/train/depth",
+            encoder="vitl"
+        )
 
-    # predict_and_save_depths(
-    #     rgb_dir="data/dataset/depth_img/test/image",
-    #     save_dir="data/dataset/depth_prediction_point_clouds/test/depth",
-    #     encoder="vitl"
-    # )
+        predict_and_save_depths(
+            rgb_dir="data/dataset/depth_img/test/image",
+            save_dir="data/dataset/depth_prediction_point_clouds/test/depth",
+            encoder="vitl"
+        )
 
-    # convert_depth_png_to_npy(
-    #     input_dir="data/dataset/depth_img/train/depth",
-    #     output_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt"
-    # )
+        convert_depth_png_to_npy(
+            input_dir="data/dataset/depth_img/train/depth",
+            output_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt"
+        )
 
-    # convert_depth_png_to_npy(
-    #     input_dir="data/dataset/depth_img/test/depth",
-    #     output_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt"
-    # )
+        convert_depth_png_to_npy(
+            input_dir="data/dataset/depth_img/test/depth",
+            output_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt"
+        )
 
-    # eval_depth_all(
-    #     pred_dir="data/dataset/depth_prediction_point_clouds/train/depth",
-    #     gt_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt",
-    #     verbose=True
-    # )
-    # eval_depth_all(
-    #     pred_dir="data/dataset/depth_prediction_point_clouds/test/depth",
-    #     gt_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt",
-    #     verbose=True
-    # )
+        eval_depth_all(
+            pred_dir="data/dataset/depth_prediction_point_clouds/train/depth",
+            gt_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt",
+            verbose=True
+        )
+        eval_depth_all(
+            pred_dir="data/dataset/depth_prediction_point_clouds/test/depth",
+            gt_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt",
+            verbose=True
+        )
 
-    # generate_point_cloud_depth_prediction()
-    # generate_label_file("data/dataset/depth_prediction_point_clouds/train/point_clouds", "data/dataset/depth_prediction_point_clouds/train/point_clouds/train_labels.txt")
-    # generate_label_file("data/dataset/depth_prediction_point_clouds/test/point_clouds", "data/dataset/depth_prediction_point_clouds/test/point_clouds/test_labels.txt")
+        generate_point_cloud_depth_prediction()
+        generate_label_file("data/dataset/depth_prediction_point_clouds/train/point_clouds", "data/dataset/depth_prediction_point_clouds/train/point_clouds/train_labels.txt")
+        generate_label_file("data/dataset/depth_prediction_point_clouds/test/point_clouds", "data/dataset/depth_prediction_point_clouds/test/point_clouds/test_labels.txt")
 
 
-    # training point cloud classification model as pipeline A
-    # but use the pipeline B point cloud dataset
-    args_train = parse_args_train()
-    train(args=args_train)
+        # # training point cloud classification model as pipeline A
+        # # but use the pipeline B point cloud dataset
+        # args_train = parse_args_train()
+        # train(args=args_train)
 
-    args_test = parse_args_test()
-    test(args=args_test)
+        args_test = parse_args_test()
+        test(args=args_test)
+    else:
+        # ### RealSense data ### 
+        predict_and_save_depths(
+            rgb_dir="data/dataset/realsense_depth_img/test/image",
+            save_dir="data/dataset/realsense_depth_prediction_point_clouds/test/depth",
+            encoder="vitl",
+            gt_base_Path="data/dataset/realsense_point_clouds",
+            epsilon=100
+        )
+        convert_depth_png_to_npy(
+            input_dir="data/dataset/realsense_depth_img/test/depth",
+            output_dir="data/dataset/realsense_depth_prediction_point_clouds/test/depth_gt"
+        )
+        eval_depth_all(
+            pred_dir="data/dataset/realsense_depth_prediction_point_clouds/test/depth",
+            gt_dir="data/dataset/realsense_depth_prediction_point_clouds/test/depth_gt",
+            verbose=True
+        )
+        process_all_single_folder(image_root="data/dataset/realsense_depth_img/test/image",
+                                  depth_root="data/dataset/realsense_depth_prediction_point_clouds/test/depth",
+                                  intrinsic_path="data/dataset/realsense_point_clouds/intrinsics.txt",
+                                  output_dir="data/dataset/realsense_depth_prediction_point_clouds/test/point_clouds")
+        args_test = parse_args_test()
+        test(args=args_test)
