@@ -353,51 +353,51 @@ def parse_args_test():
     
 
 if __name__ == '__main__':
-    dataset = "CW2"  # "RealSense" or ""
+    dataset = "RealSense"  # "RealSense" or "CW2"
     if dataset == "CW2":
         ### CW2 data ###
         predict_and_save_depths(
             rgb_dir="data/dataset/depth_img/train/image",
-            save_dir="data/",
+            save_dir="data/dataset/depth_prediction_point_clouds/train/depth",
             encoder="vitl"
         )
 
-        # predict_and_save_depths(
-        #     rgb_dir="data/dataset/depth_img/test/image",
-        #     save_dir="data/dataset/depth_prediction_point_clouds/test/depth",
-        #     encoder="vitl"
-        # )
+        predict_and_save_depths(
+            rgb_dir="data/dataset/depth_img/test/image",
+            save_dir="data/dataset/depth_prediction_point_clouds/test/depth",
+            encoder="vitl"
+        )
 
-        # convert_depth_png_to_npy(
-        #     input_dir="data/dataset/depth_img/train/depth",
-        #     output_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt"
-        # )
+        convert_depth_png_to_npy(
+            input_dir="data/dataset/depth_img/train/depth",
+            output_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt"
+        )
 
-        # convert_depth_png_to_npy(
-        #     input_dir="data/dataset/depth_img/test/depth",
-        #     output_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt"
-        # )
+        convert_depth_png_to_npy(
+            input_dir="data/dataset/depth_img/test/depth",
+            output_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt"
+        )
 
-        # eval_depth_all(
-        #     pred_dir="data/dataset/depth_prediction_point_clouds/train/depth",
-        #     gt_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt",
-        #     verbose=True
-        # )
-        # eval_depth_all(
-        #     pred_dir="data/dataset/depth_prediction_point_clouds/test/depth",
-        #     gt_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt",
-        #     verbose=True
-        # )
+        eval_depth_all(
+            pred_dir="data/dataset/depth_prediction_point_clouds/train/depth",
+            gt_dir="data/dataset/depth_prediction_point_clouds/train/depth_gt",
+            verbose=True
+        )
+        eval_depth_all(
+            pred_dir="data/dataset/depth_prediction_point_clouds/test/depth",
+            gt_dir="data/dataset/depth_prediction_point_clouds/test/depth_gt",
+            verbose=True
+        )
 
-        # generate_point_cloud_depth_prediction()
-        # generate_label_file("data/dataset/depth_prediction_point_clouds/train/point_clouds", "data/dataset/depth_prediction_point_clouds/train/point_clouds/train_labels.txt")
-        # generate_label_file("data/dataset/depth_prediction_point_clouds/test/point_clouds", "data/dataset/depth_prediction_point_clouds/test/point_clouds/test_labels.txt")
+        generate_point_cloud_depth_prediction()
+        generate_label_file("data/dataset/depth_prediction_point_clouds/train/point_clouds", "data/dataset/depth_prediction_point_clouds/train/point_clouds/train_labels.txt")
+        generate_label_file("data/dataset/depth_prediction_point_clouds/test/point_clouds", "data/dataset/depth_prediction_point_clouds/test/point_clouds/test_labels.txt")
 
 
-        # # training point cloud classification model as pipeline A
-        # # but use the pipeline B point cloud dataset
-        # args_train = parse_args_train()
-        # train(args=args_train)
+        # training point cloud classification model as pipeline A
+        # but use the pipeline B point cloud dataset
+        args_train = parse_args_train()
+        train(args=args_train)
 
         args_test = parse_args_test()
         test(args=args_test)

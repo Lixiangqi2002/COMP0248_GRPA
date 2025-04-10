@@ -40,7 +40,7 @@ All evaluation results, model checkpoints, and performance plots are stored unde
 
 Online link: [text](https://drive.google.com/file/d/1hBNld0Vw1kuaOtz-9lvqHINvR3WARdsp/view?usp=sharing)
 
-Please place the logs under folder `log`：
+**Please place the logs under folder `log`：**
 Organized by experiment name and pipeline type.
 
 Each pipeline subfolder (e.g. `binary_pointnet2_pipeline_A`) contains:
