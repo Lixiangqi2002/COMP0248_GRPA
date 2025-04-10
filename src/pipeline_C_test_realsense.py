@@ -16,6 +16,7 @@ import numpy as np
 import torch.nn.functional as F
 import open3d as o3d
 import numpy as np
+import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
@@ -34,7 +35,7 @@ def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size in testing [default: 32]')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--num_point', type=int, default=8192, help='point number [default: 4096]')
+    parser.add_argument('--num_point', type=int, default=40960, help='point number [default: 4096]')
     parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_C_realsense', required=False, help='experiment root')
     parser.add_argument('--num_votes', type=int, default=1, help='aggregate segmentation scores with voting [default: 5]')
     return parser.parse_args()
@@ -66,11 +67,19 @@ def visualize(pc, label):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(xyz)
 
-    # Set colors based on labels
-    colors = np.zeros((xyz.shape[0], 3))
-    colors[label == 0] = [0.5, 0.5, 0.5]   # gray
-    colors[label == 1] = [1.0, 0.0, 0.0]   # red
-    pcd.colors = o3d.utility.Vector3dVector(colors)
+    if pc.shape[0] >= 6:
+        rgb = pc[3:6, :].T
+        if np.max(rgb) > 1:
+            rgb = rgb / 255.0
+       
+        rgb[label == 1] = [1.0, 0.0, 0.0]  
+        pcd.colors = o3d.utility.Vector3dVector(rgb)
+    else:
+        colors = np.zeros((xyz.shape[0], 3))
+        colors[label == 0] = [0.5, 0.5, 0.5]   # background: gray
+        colors[label == 1] = [1.0, 0.0, 0.0]   # table: red
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+    # pcd.colors = o3d.utility.Vector3dVector(rgb)
 
     # Visualize
     o3d.visualization.draw_geometries([pcd])
@@ -138,12 +147,16 @@ def main(args):
     NUM_CLASSES = 2  # 13
     BATCH_SIZE = args.batch_size
     NUM_POINT = args.num_point
-    
+    rotation_dict_path="data/dataset/realsense_point_clouds_C/rotation_matrices.json"
+    if rotation_dict_path:
+        with open(rotation_dict_path, "r") as f:
+            rotation_dict = json.load(f)
     print("start loading testing data ...")
     test_dataset = PointCloudDataset(
         "data/dataset/realsense_point_clouds_C/test/test_labels.txt", 
         num_points=NUM_POINT, 
-        test=True)
+        test=True
+        )
     test_loader = DataLoader(
         test_dataset, 
         batch_size=BATCH_SIZE, 
@@ -161,9 +174,7 @@ def main(args):
     model = model.eval()
 
     with torch.no_grad():
-        # scene_id = test_dataset.file_list
-        # scene_id = [x[:-4] for x in scene_id]
-        # num_batches = len(test_dataset)
+  
         loss_sum = 0
         total_seen_class = [0 for _ in range(NUM_CLASSES)]
         total_correct_class = [0 for _ in range(NUM_CLASSES)]
@@ -171,14 +182,12 @@ def main(args):
 
         # for batch_idx in range(num_batches):
         for batch_idx, (points, labels, filename) in tqdm(enumerate(test_loader), total=len(test_loader)):
-            
+            print(filename)
+           
             points = points.to(device)              # [B, N, 9]
-            
-
             labels = labels.to(device).float()      # [B, N]
             
-            # print(f"Shape of points: {points.shape}")
-            # print(f"Shape of labels: {labels.shape}")
+      
             points = points.transpose(2, 1)         # [B, N, 9] --> [B, 9, N]
             
             # initialize vote label pool
@@ -244,39 +253,6 @@ def main(args):
                 total_seen_class[l] += total_seen_class_tmp[l]
                 total_correct_class[l] += total_correct_class_tmp[l]
                 total_iou_deno_class[l] += total_iou_deno_class_tmp[l]
-
-            # iou_map = total_correct_class_tmp / (total_iou_deno_class_tmp + 1e-6)
-            # tmp_iou = np.mean(iou_map[total_seen_class_tmp != 0])
-            # log_string(f'Mean IoU of batch {batch_idx}: {tmp_iou:.4f}')
-            # print(f'Batch {batch_idx}, IoU: {tmp_iou:.4f}')
-
-
-        # log_string('------- Saving Evaluation Results --------')
-        # IoU = np.array(total_correct_class) / (np.array(total_iou_deno_class, dtype=float) + 1e-6)
-        # valid_ious = IoU[np.array(total_seen_class) > 0]
-        # precision = global_TP / (global_TP + global_FP + 1e-6)
-        # recall = global_TP / (global_TP + global_FN + 1e-6)
-        # f1 = 2 * precision * recall / (precision + recall + 1e-6)
-        # avg_loss = loss_sum / len(test_loader.dataset)
-
-        # results_dict = {
-        #     "IoU_table": [IoU[1]],  # 假设 class_id=1 是 table
-        #     "IoU_background": [IoU[0]],
-        #     "IoU_mean": [np.mean(valid_ious)],
-        #     "IoU_std": [np.std(valid_ious)],
-        #     "IoU_median": [np.median(valid_ious)],
-        #     "IoU_max": [np.max(valid_ious)],
-        #     "IoU_min": [np.min(valid_ious)],
-        #     "Precision": [precision],
-        #     "Recall": [recall],
-        #     "F1": [f1],
-        #     "Loss": [avg_loss],
-        # }
-        # print(f"Results: {results_dict}")
-        
-        # df = pd.DataFrame(results_dict)
-        # df.to_csv(experiment_dir + '/eval_results.csv', index=False)
-        # print(f"Saved evaluation results to {experiment_dir}/eval_results.csv")
 
         print("Evaluation complete!")
 

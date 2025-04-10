@@ -14,6 +14,8 @@ import importlib
 from tqdm import tqdm
 import numpy as np
 import torch.nn.functional as F
+import open3d as o3d
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = BASE_DIR
@@ -32,7 +34,7 @@ def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size in testing [default: 32]')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--num_point', type=int, default=4096, help='point number [default: 4096]')
+    parser.add_argument('--num_point', type=int, default=40960, help='point number [default: 4096]')
     parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_C', required=False, help='experiment root')
     parser.add_argument('--visual', action='store_true', default=False, help='visualize result [default: False]')
     parser.add_argument('--test_area', type=int, default=5, help='area for testing, option: 1-6 [default: 5]')
@@ -49,8 +51,7 @@ def add_vote(vote_label_pool, point_idx, pred_label, weight):
                 vote_label_pool[int(point_idx[b, n]), int(pred_label[b, n])] += 1
     return vote_label_pool
 
-import open3d as o3d
-import numpy as np
+
 
 
 def visualize(pc, label):
@@ -68,11 +69,18 @@ def visualize(pc, label):
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(xyz)
 
-    # Set colors based on labels
-    colors = np.zeros((xyz.shape[0], 3))
-    colors[label == 0] = [0.5, 0.5, 0.5]   # gray
-    colors[label == 1] = [1.0, 0.0, 0.0]   # red
-    pcd.colors = o3d.utility.Vector3dVector(colors)
+    if pc.shape[0] >= 6:
+        rgb = pc[3:6, :].T
+        if np.max(rgb) > 1:
+            rgb = rgb / 255.0
+        rgb[label == 1] = [1.0, 0.0, 0.0]  
+        pcd.colors = o3d.utility.Vector3dVector(rgb)
+    else:
+        colors = np.zeros((xyz.shape[0], 3))
+        colors[label == 0] = [0.5, 0.5, 0.5]   # background: gray
+        colors[label == 1] = [1.0, 0.0, 0.0]   # table: red
+        pcd.colors = o3d.utility.Vector3dVector(colors)
+    # pcd.colors = o3d.utility.Vector3dVector(rgb)
 
     # Visualize
     o3d.visualization.draw_geometries([pcd])
@@ -173,7 +181,7 @@ def main(args):
 
         # for batch_idx in range(num_batches):
         for batch_idx, (points, labels, filename) in tqdm(enumerate(test_loader), total=len(test_loader)):
-            
+            print(filename)
             points = points.to(device)              # [B, N, 9]
             labels = labels.to(device).float()      # [B, N]
 
@@ -192,7 +200,7 @@ def main(args):
                 gt_labels = labels.cpu().numpy()  # [B, N]
                 pred_labels = pred_choice_reshaped.numpy()  # [B, N]
                     
-                visualize(points, labels.cpu())
+                # visualize(points, labels.cpu())
                 visualize(points, pred_choice_reshaped)
 
                 pred_np = pred_choice_reshaped.cpu().numpy() if hasattr(pred_choice, 'cpu') else pred_choice

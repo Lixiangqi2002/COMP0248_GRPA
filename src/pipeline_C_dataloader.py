@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 import open3d as o3d
+import json
 
 class PointCloudDataset(Dataset):
     def __init__(self, label_file, num_points=4096, test=False, augment=False):
@@ -13,6 +14,7 @@ class PointCloudDataset(Dataset):
         self.augment = augment
         self.test = test
         self.path = []
+
 
         with open(label_file, "r") as f:
             for line in f:
@@ -44,6 +46,8 @@ class PointCloudDataset(Dataset):
         # print shape for debugging
         pc = self.data[idx]   # shape: (N, 9)
         label = self.labels[idx]  # shape: (N,)
+        path = self.path[idx]
+        filename = os.path.basename(path)
         # print(f"Point cloud shape: {pc.shape}, Label shape: {label.shape}")
 
         assert pc.shape[0] == label.shape[0], "Point and label count mismatch!"
@@ -59,11 +63,7 @@ class PointCloudDataset(Dataset):
             indices = np.random.choice(pc.shape[0], self.num_points, replace=True)
             pc = pc[indices]
             label = label[indices]
-        # print(pc[:,:3])
-        # mean_xyz = pc[:, :3].mean(axis=0)
-        # if mean_xyz.mean() < 0.5:
-        #     pc[:, :0] *= 15.0
-        # # pc[:, :3] *= 10.01
+
         return torch.tensor(pc, dtype=torch.float32), torch.tensor(label, dtype=torch.long),  self.path[idx]
 
     def random_rotate(self, pc):
@@ -108,28 +108,28 @@ def visualize(pc, label):
     # Visualize
     o3d.visualization.draw_geometries([pcd])
 
-if __name__=='__main__':
+# if __name__=='__main__':
 
-    trainset = PointCloudDataset("data/dataset/point_clouds_C/train/train_labels.txt", num_points=2048)
-    testset = PointCloudDataset("data/dataset/point_clouds_C/test/test_labels.txt", num_points=2048) 
-    train_loader = DataLoader(trainset, batch_size=1, shuffle=False)
-    test_loader = DataLoader(testset, batch_size=1, shuffle=False)
+#     trainset = PointCloudDataset("data/dataset/point_clouds_C/train/train_labels.txt", num_points=2048)
+#     testset = PointCloudDataset("data/dataset/point_clouds_C/test/test_labels.txt", num_points=2048) 
+#     train_loader = DataLoader(trainset, batch_size=1, shuffle=False)
+#     test_loader = DataLoader(testset, batch_size=1, shuffle=False)
 
-    for i, (pc, label) in enumerate(train_loader):
+#     for i, (pc, label) in enumerate(train_loader):
         
-        print(pc.shape, label.shape)
+#         print(pc.shape, label.shape)
 
-        # visualize the prediction
+#         # visualize the prediction
 
-        # print(f"Shape of points: {pc.shape}")
-        # print(f"Shape of labels: {label.shape}")
-        visualize(pc, label)
+#         # print(f"Shape of points: {pc.shape}")
+#         # print(f"Shape of labels: {label.shape}")
+#         visualize(pc, label)
                                    
-        # if i == 0:
-        #     break
+#         # if i == 0:
+#         #     break
 
-    for i, (pc, label) in enumerate(test_loader):
-        print(pc.shape, label.shape)
-        if i == 0:
-            break
+#     for i, (pc, label) in enumerate(test_loader):
+#         print(pc.shape, label.shape)
+#         if i == 0:
+#             break
     

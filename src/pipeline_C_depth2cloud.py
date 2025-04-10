@@ -54,9 +54,9 @@ class point_cloud_generator():
         # X, Y, Z are the 3D coordinates in camera space
         X = ((u_grid - self.cx) * Z) / self.fx
         Y = ((v_grid - self.cy) * Z) / self.fy
-        X *= 50
-        Y *= 50
-        Z *= 50
+        X *= 100
+        Y *= 100
+        Z *= 100
         # Convert RGB image to numpy array and transpose to (H, W, 3)
         img = np.array( self.rgb).transpose(1, 0, 2)  # (W, H, 3)
 
@@ -171,7 +171,6 @@ class point_cloud_generator():
         
         pc_xyz = pc[:, :3]
         rgb = pc[:, 3:6]
-
         # normalize the point cloud coordinates
         max_xyz = np.max(pc_xyz, axis=0)
         norm_xyz = pc_xyz / max_xyz  # (N, 3)
@@ -181,7 +180,6 @@ class point_cloud_generator():
 
         # print shapes for debugging
         print(f"full shape: {full.shape}, mask shape: {mask_pc.shape}")
-
 
         # compute label
         pc_rounded = np.round(pc_xyz, 3)
@@ -302,23 +300,18 @@ def process_all(base_dir, output_dir):
         #     break  
         # break    
 
-def save_label_file_mapping(split_dir, output_file, data="CW2"):
+def save_label_file_mapping(split_dir, output_file):
     """Scan split_dir and save (full.npy, label.npy) path pairs to a txt file."""
     entries = []
     for root, _, files in os.walk(split_dir):
         for file in files:
-            # if data == "CW2":
+           
             if file.endswith("_full.npy"):
                 full_path = os.path.join(root, file)
                 label_path = full_path.replace('_full.npy', '_label.npy')
                 if os.path.exists(label_path):  # Only record if label also exists
                     entries.append(f"{full_path} {label_path}\n")
-            # elif data == "Realsense":
-            #     if file.endswith("_full.npy"):
-            #         full_path = os.path.join(root, file)
-            #         label_path = full_path.replace('_full.npy', '_label.npy')
-            #         if os.path.exists(label_path):
-            #             entries.append(f"{full_path} {label_path}\n")
+      
     with open(output_file, "w") as f:
         f.writelines(entries)
     print(f"Saved {len(entries)} entries to {output_file}")
