@@ -4,7 +4,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 import pointnet2_seg
 import matplotlib.pyplot as plt
 import argparse
-
+import provider
 from pipeline_C_dataloader import PointCloudDataset
 
 import torch
@@ -236,6 +236,10 @@ def main(args):
             log_string('---- EPOCH %03d EVALUATION ----' % (global_epoch + 1))
             for i, (points, target, _) in tqdm(enumerate(val_loader), total=len(val_loader), smoothing=0.9):
                 points = points.data.numpy()
+                points[:, :, :3] = provider.rotate_point_cloud_z(points[:, :, :3])
+                points[:, :, :3] = provider.jitter_point_cloud(points[:, :, :3])
+                points[:, :, :3] = provider.random_scale_point_cloud(points[:, :, :3])
+       
                 points = torch.Tensor(points)
                 points, target = points.float().cuda(), target.long().cuda()
                 points = points.transpose(2, 1)

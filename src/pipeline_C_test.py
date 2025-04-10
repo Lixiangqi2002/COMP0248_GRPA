@@ -201,7 +201,7 @@ def main(args):
                 pred_labels = pred_choice_reshaped.numpy()  # [B, N]
                     
                 # visualize(points, labels.cpu())
-                visualize(points, pred_choice_reshaped)
+                # visualize(points, pred_choice_reshaped)
 
                 pred_np = pred_choice_reshaped.cpu().numpy() if hasattr(pred_choice, 'cpu') else pred_choice
                 label_np = labels.cpu().numpy() if hasattr(labels, 'cpu') else labels

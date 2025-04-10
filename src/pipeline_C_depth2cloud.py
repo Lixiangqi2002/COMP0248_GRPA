@@ -8,11 +8,13 @@ from PIL import Image
 import open3d as o3d
 import cv2
 import os
+from sklearn.linear_model import RANSACRegressor
 
+from scipy import stats
 
 class point_cloud_generator():
 
-    def __init__(self, rgb_file, depth_file, output_prefix, fx, fy, cx, cy, scalingfactor=1000):
+    def __init__(self, rgb_file, depth_file, output_prefix, fx, fy, cx, cy, scalingfactor=1000, do_inpaint=False):
         self.rgb_file = rgb_file
         self.depth_file = depth_file
         self.output_prefix = output_prefix  # e.g. "data/frame00001"
@@ -37,6 +39,44 @@ class point_cloud_generator():
         # self.depth = Image.open(depth_file).convert('I')  # uint16
         self.width = self.rgb.size[0]
         self.height = self.rgb.size[1]
+        if do_inpaint:
+            # self.adjust_rgb_brightness_contrast(alpha=0.3, beta=100)
+            self.depth = self.inpaint_depth(self.depth)
+            depth_name = os.path.basename(depth_file)
+            depth_name_no_ext = os.path.splitext(depth_name)[0]
+            filename ="data/dataset/realsense_depth_img_C/test/depth_inpainted/" + depth_name_no_ext + "_inpainted.png"
+            print(f"[Inpaint] Save inpainted depth to {filename}")
+            self.visualize_depth(filename)
+    
+
+    def inpaint_depth(self, depth):
+        if self.depth_type != "png":
+            print("[Inpaint] Only support .png depth, skip inpaint.")
+            return depth
+
+        mask = (depth == 0).astype(np.uint8)
+        depth_min = np.min(depth[depth > 0])
+        depth_max = np.max(depth)
+        depth_normalized = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
+        inpainted = cv2.inpaint(depth_normalized, mask, inpaintRadius=5, flags=cv2.INPAINT_NS)
+
+        restored = inpainted.astype(np.float32) / 255 * (depth_max - depth_min) + depth_min
+   
+        smoothed = cv2.bilateralFilter(restored.astype(np.float32), d=7, sigmaColor=75, sigmaSpace=75)
+
+        restored[mask == 1] = smoothed[mask == 1]
+        print(f"[Debug] Depth min={np.min(restored)}, max={np.max(restored)}, mean={np.mean(restored)}")
+        # restored = fit_plane_ransac(restored, mask)
+        return restored.astype(np.uint16)
+
+
+    def visualize_depth(self, out_filename):
+        plt.figure(figsize=(12, 5))
+        plt.imshow(self.depth, cmap='gray')
+        plt.axis("off")
+        plt.savefig(out_filename, bbox_inches='tight', pad_inches=0)
+        plt.close()
 
     def calculate(self, polygon_mask=None):
         """Calculate 3D point cloud from RGB and depth images"""
@@ -54,14 +94,16 @@ class point_cloud_generator():
         # X, Y, Z are the 3D coordinates in camera space
         X = ((u_grid - self.cx) * Z) / self.fx
         Y = ((v_grid - self.cy) * Z) / self.fy
-        X *= 100
-        Y *= 100
-        Z *= 100
+        X *= 300 
+        Y *= 300
+        Z *= 300
         # Convert RGB image to numpy array and transpose to (H, W, 3)
         img = np.array( self.rgb).transpose(1, 0, 2)  # (W, H, 3)
 
         # check if the depth value is valid (greater than 0)
         valid = (Z > 0)  
+        # print(f"[Depth Stats] valid pixel count: {len(valid)}, min: {np.min(valid)}, max: {np.max(valid)}")
+
 
         X_full = X[valid]
         Y_full = Y[valid]
@@ -140,7 +182,7 @@ class point_cloud_generator():
             with open(out_file, "w") as file:
                 file.write(
                             '''ply
-                                format ascii 1.0  #
+                                format ascii 1.0  
                                 element vertex %d
                                 property float x
                                 property float y
@@ -196,7 +238,6 @@ class point_cloud_generator():
         pcd = o3d.io.read_point_cloud(ply_file)
         o3d.visualization.draw_geometries([pcd])
 
-
 def create_polygon_mask(polygon_list, height, width):
     """Generate binary mask (H, W) from polygon list"""
     mask = np.zeros((height, width), dtype=np.uint8)
@@ -215,13 +256,19 @@ def read_intrinsics_from_txt(file_path):
 
     return fx, fy, cx, cy
 
-def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, output_prefix_labels):
+def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, output_prefix_labels, data="CW2"):
     if not polygon_list: 
         mask = np.zeros((480, 640), dtype=np.uint8)
     else:
         mask = create_polygon_mask(polygon_list, height=480, width=640)
-    pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy)
-    pcg.calculate(polygon_mask=None) # or mask
+    if data=="CW2":
+        pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy, do_inpaint=False)
+        pcg.calculate(polygon_mask=mask) # or mask
+    elif data=="Realsense":
+        pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy, do_inpaint=True)
+        # pcg.depth = show_rgb_with_click_and_fit(rgb_file, pcg.depth, fx, fy, cx, cy)
+
+        pcg.calculate(polygon_mask=None)
     pcg.write_ply()
     pcg.save_npy()
     # pcg.show_point_cloud(tag='mask')
@@ -286,7 +333,7 @@ def process_all(base_dir, output_dir):
                 # e.g. output_dir+f"/{dir_name}": data/dataset/point_clouds_C/train
                 # e.g. os.path.basename(scene): mit_32_d507_1
                 out_prefix = os.path.join(output_dir+f"/{dir_name}", f"{split}_{os.path.basename(scene)}_{filename_no_ext}")
-                generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix)
+                generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix, data="CW2")
 
                 # # visualize the labels on the rgb images
                 # img = plt.imread(rgb_path)
@@ -360,12 +407,13 @@ def process_all_single_folder(image_root, depth_root, intrinsic_path, output_dir
         raise FileNotFoundError(f"intrinsics.txt not found in {intrinsic_path}")
 
     fx, fy, cx, cy = read_intrinsics_from_txt(intrinsic_path)
-
+    print(f"fx: {fx}, fy: {fy}, cx: {cx}, cy: {cy}")
     scenes = [d for d in os.listdir(image_root) if os.path.isdir(os.path.join(image_root, d))]
 
     for scene in scenes:
         print(f"Processing scene: {scene}")
-
+        # if scene != "big_yellow_square_table":
+        #     continue
         image_dir = os.path.join(image_root, scene)
         depth_dir = os.path.join(depth_root, scene)
 
@@ -387,7 +435,7 @@ def process_all_single_folder(image_root, depth_root, intrinsic_path, output_dir
             filename_no_ext = os.path.splitext(img_file)[0].replace("rgb_", "")
 
             out_prefix = os.path.join(output_dir, dir_name, f"{scene}_{filename_no_ext}")
-            generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix)
+            generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix, data="Realsense")
 
 
 def organize_rgbd_dataset_single_dataset(src_root, test_scenes, dst_root: str = "data/dataset/depth_img"):

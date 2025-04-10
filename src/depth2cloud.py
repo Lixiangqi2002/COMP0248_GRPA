@@ -13,7 +13,7 @@ import os
 
 class point_cloud_generator():
 
-    def __init__(self, rgb_file, depth_file, output_prefix, fx, fy, cx, cy, scalingfactor=1000):
+    def __init__(self, rgb_file, depth_file, output_prefix, fx, fy, cx, cy, scalingfactor=1000, do_inpaint=False):
         self.rgb_file = rgb_file
         self.depth_file = depth_file
         self.output_prefix = output_prefix  # e.g. "data/frame00001"
@@ -37,6 +37,42 @@ class point_cloud_generator():
         # self.depth = Image.open(depth_file).convert('I')  # uint16
         self.width = self.rgb.size[0]
         self.height = self.rgb.size[1]
+        if do_inpaint:
+            self.depth = self.inpaint_depth(self.depth)
+            # self.visualize_depth()
+
+    def inpaint_depth(self, depth):
+        if self.depth_type != "png":
+            print("[Inpaint] Only support .png depth, skip inpaint.")
+            return depth
+
+        mask = (depth == 0).astype(np.uint8)
+        depth_min = np.min(depth[depth > 0])
+        depth_max = np.max(depth)
+        depth_normalized = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+
+        inpainted = cv2.inpaint(depth_normalized, mask, inpaintRadius=3, flags=cv2.INPAINT_NS)
+
+        restored = inpainted.astype(np.float32) / 255 * (depth_max - depth_min) + depth_min
+        # restored = inpainted.astype(np.float32) / 255 * np.max(depth)
+        print(f"[Debug] Depth min={np.min(restored)}, max={np.max(restored)}, mean={np.mean(restored)}")
+
+        return restored.astype(np.uint16)
+
+    def visualize_depth(self):
+        plt.figure(figsize=(12, 5))
+        plt.subplot(1, 2, 1)
+        plt.imshow(self.depth, cmap='gray')
+        plt.title("Inpainted Depth")
+        plt.axis("off")
+
+        plt.subplot(1, 2, 2)
+        rgb_vis = np.asarray(self.rgb)
+        plt.imshow(rgb_vis)
+        plt.title("RGB Image")
+        plt.axis("off")
+        plt.tight_layout()
+        plt.show()
 
     def calculate(self, polygon_mask=None):
         t1 = time.time()
@@ -165,15 +201,17 @@ def read_intrinsics_from_txt(file_path):
 
 
 
-def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, output_prefix_labels):
+def generate_point_cloud(rgb_file, depth_file, polygon_list, fx, fy, cx, cy, output_prefix_labels, data="CW2"):
     if not polygon_list: 
         mask = np.zeros((480, 640), dtype=np.uint8)
     else:
         mask = create_polygon_mask(polygon_list, height=480, width=640)
-    
-    pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy)
-    # pcg.calculate(polygon_mask=mask)
-    pcg.calculate(polygon_mask=None)
+    if data == "CW2":
+        pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy, do_inpaint=False)
+        pcg.calculate(polygon_mask=mask)
+    elif data == "Realsense":
+        pcg = point_cloud_generator(rgb_file, depth_file, output_prefix_labels, fx, fy, cx, cy, do_inpaint=True)
+        pcg.calculate(polygon_mask=None)
     pcg.write_ply()
     pcg.save_npy()
     # pcg.show_point_cloud(tag='mask')
@@ -229,7 +267,7 @@ def process_all(base_dir, output_dir):
                 d_path = os.path.join(depth_dir, depth_file)
                 filename_no_ext = os.path.splitext(img_file)[0]
                 out_prefix = os.path.join(output_dir+f"/{dir_name}", f"{split}_{os.path.basename(scene)}_{filename_no_ext}")
-                generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix)
+                generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix, data="CW2")
                 # # visualize the labels on the rgb images
                 # img = plt.imread(rgb_path)
                 # plt.imshow(img)
@@ -278,7 +316,7 @@ def process_all_single_folder(image_root, depth_root, intrinsic_path, output_dir
             filename_no_ext = os.path.splitext(img_file)[0].replace("rgb_", "")
 
             out_prefix = os.path.join(output_dir, dir_name, f"{scene}_{filename_no_ext}")
-            generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix)
+            generate_point_cloud(rgb_path, d_path, polygon_list, fx, fy, cx, cy, out_prefix, data ="Realsense")
 
 
 

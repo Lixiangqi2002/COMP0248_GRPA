@@ -35,9 +35,9 @@ def parse_args():
     parser = argparse.ArgumentParser('Model')
     parser.add_argument('--batch_size', type=int, default=1, help='batch size in testing [default: 32]')
     parser.add_argument('--gpu', type=str, default='0', help='specify gpu device')
-    parser.add_argument('--num_point', type=int, default=40960, help='point number [default: 4096]')
+    parser.add_argument('--num_point', type=int, default=100000, help='point number [default: 4096]')
     parser.add_argument('--log_dir', type=str, default='binary_pointnet2_pipeline_C_realsense', required=False, help='experiment root')
-    parser.add_argument('--num_votes', type=int, default=1, help='aggregate segmentation scores with voting [default: 5]')
+    parser.add_argument('--num_votes', type=int, default=5, help='aggregate segmentation scores with voting [default: 5]')
     return parser.parse_args()
 
 
@@ -177,11 +177,11 @@ def main(args):
         # for batch_idx in range(num_batches):
         for batch_idx, (points, labels, filename) in tqdm(enumerate(test_loader), total=len(test_loader)):
             print(filename)
-           
+            # if "big_yellow_square_table" not in filename[0]:
+            #     continue
             points = points.to(device)              # [B, N, 9]
             labels = labels.to(device).float()      # [B, N]
             
-      
             points = points.transpose(2, 1)         # [B, N, 9] --> [B, 9, N]
             
             # initialize vote label pool

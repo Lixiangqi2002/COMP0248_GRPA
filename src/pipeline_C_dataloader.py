@@ -63,7 +63,12 @@ class PointCloudDataset(Dataset):
             indices = np.random.choice(pc.shape[0], self.num_points, replace=True)
             pc = pc[indices]
             label = label[indices]
-
+        
+        # # Augmentation
+        # if self.augment and not self.test:
+        #     pc = self.random_rotate(pc)
+        #     pc = self.random_jitter(pc)
+        #     pc = self.random_scale(pc)
         return torch.tensor(pc, dtype=torch.float32), torch.tensor(label, dtype=torch.long),  self.path[idx]
 
     def random_rotate(self, pc):
