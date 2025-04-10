@@ -6,7 +6,7 @@
  - CW2-Dataset : refer to coursework requirements.
  - realsense : [text](https://drive.google.com/file/d/1SzfCeA_qOrDVZgeYqhs0KyEmW27aEHnw/view?usp=drive_link)
  - realsense_raw : [text](https://drive.google.com/file/d/1LnpcNDON0TLvxWPAgkwbaZXPW-4Y0Ywx/view?usp=sharing) 
- - dataset ： 
+ - dataset ： [text](https://drive.google.com/file/d/1aT0Iam7XWZPmjvM55s06Zks6c4W4hmsc/view?usp=sharing)
 
 
 Please place the dataset under folder `data`:
