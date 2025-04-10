@@ -9,7 +9,7 @@
  - dataset ： [text](https://drive.google.com/file/d/1aT0Iam7XWZPmjvM55s06Zks6c4W4hmsc/view?usp=sharing)
 
 
-Please place the dataset under folder `data`:
+**Please place the dataset under folder `data`:**
 ```
 data/ 
 ├── CW2-Dataset/ # Public dataset provided by the course (CW2) 
@@ -66,12 +66,30 @@ pip install -r requirements.txt
 
 Below are the main components of the project and their purposes:
 
-### 1. `depth2cloud.py`
-Generate 3D point cloud from RGB & Depth images.  
-Outputs `.npy` (point cloud with RGB and normalized coordinates) and `.ply` (for visualization).  
-Used in all pipelines.
+### 1. [Optional] Generate Point Cloud 
+Note: if you have already downloaded the dataset listed above and placed them at correct places. You don't need to execute this part.
 
----
+#### Point Cloud for Pipeline A & B (`depth2cloud.py`))
+
+
+```Bash
+# If you want to generate default dataset 
+data = "CW2" 
+# If you want to generate our customized dataset
+data = "Realsense" 
+```
+Then execute this python script. It might take you a few minute to fully generate the point cloud for training and testing.
+
+
+#### Point Cloud for Pipeline C (`pipeline_C_depth2cloud.py`)
+
+```Bash
+# If you want to generate default dataset 
+data = "CW2" 
+# If you want to generate our customized dataset
+data = "Realsense" 
+```
+Then execute this python script. It might take you a few minute to fully generate the point cloud for training and testing.
 
 ### 2. **Pipeline A** - Binary Classification of Table (using PointNet++)
 - Training: `pipeline_A_pointnet2_train.py`
