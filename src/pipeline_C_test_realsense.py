@@ -60,9 +60,6 @@ def visualize(pc, label):
     
     label = label.squeeze().numpy()  # shape: (N,)
 
-    # print(f"Shape of points: {xyz.shape}")
-    # print(f"Shape of labels: {label.shape}")
-
     # Create a point cloud object
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(xyz)
@@ -147,10 +144,7 @@ def main(args):
     NUM_CLASSES = 2  # 13
     BATCH_SIZE = args.batch_size
     NUM_POINT = args.num_point
-    rotation_dict_path="data/dataset/realsense_point_clouds_C/rotation_matrices.json"
-    if rotation_dict_path:
-        with open(rotation_dict_path, "r") as f:
-            rotation_dict = json.load(f)
+   
     print("start loading testing data ...")
     test_dataset = PointCloudDataset(
         "data/dataset/realsense_point_clouds_C/test/test_labels.txt", 
