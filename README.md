@@ -2,7 +2,12 @@
 
 ## Dataset
 
-Online link: [text](https://drive.google.com/file/d/1nJDia-H7CZaEYR_yMThvisLOH2-c19Lh/view?usp=sharing)
+4 subfolders: 
+ - CW2-Dataset : refer to coursework requirements.qq
+ - realsense : [text](https://drive.google.com/file/d/1SzfCeA_qOrDVZgeYqhs0KyEmW27aEHnw/view?usp=drive_link)
+ - realsense_raw : [text](https://drive.google.com/file/d/1LnpcNDON0TLvxWPAgkwbaZXPW-4Y0Ywx/view?usp=sharing) 
+ - dataset ： 
+
 
 Please place the dataset under folder `data`:
 ```
@@ -25,6 +30,10 @@ data/
 │ ├── realsense_point_clouds_C/ # Processed Realsense point clouds (standard format) 
 │ └── realsense_depth_img_C/ # RGB-D pairs from Realsense captures
 ```
+
+Above folders could be generated automatically, following commands at the last part in this readme. 
+
+
 ## Pretrained Models
 
 All evaluation results, model checkpoints, and performance plots are stored under the `log/` directory.
