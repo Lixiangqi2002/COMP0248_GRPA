@@ -85,7 +85,7 @@ Used in all pipelines.
 ### 3. **Pipeline B** - Depth Estimation + Classification
 - Script: `pipeline_B_depth_cls.py`
 - Steps:
-  - Apply depth refinement (inpainting, smoothing)
+  - Depth Estimation: Use DepthAnything2 with `vitl` checkpoints
   - Generate updated point cloud
   - Train/test a new PointNet++ model based on updated clouds
 - Extra Logs: Includes `depth_evaluation.txt` for depth quality effects
